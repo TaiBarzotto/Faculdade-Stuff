@@ -21,6 +21,12 @@ void carregar_dados(int M, char arquivos[M*2][20]) {
         if (writting_file == NULL){
             printf("Erro ao abrir o arquivo.\n");
         }
+
+        for (int j = 0; j < M; j++)
+        {
+            aux_arr[j]=-1;
+        }
+        
         
         if (percorrer >= M-1) {
             percorrer = 0;
@@ -29,19 +35,23 @@ void carregar_dados(int M, char arquivos[M*2][20]) {
         }
 
         // Ler M elementos do arquivo de entrada
-        for (i = 0; i < M; i++) {
-            fscanf(entrada, "%d;", &aux_arr[i]);
-        }
+        int contador = 0;
+        do {
+            contador += fscanf(entrada, "%d", &aux_arr[i]);
+            printf("valor lid:%d\n",aux_arr[i]);
+            i++;
+        } while (fgetc(entrada) != EOF && contador<M);
 
         // Ordenar os M elementos lidos
         quickSort(aux_arr, 0, M-1);
 
         // Escrever os M elementos ordenados nos arquivos
-        for (j = 0; j < M-1; j++) {
+        for (j = 0; j < M; j++) {
+            if (aux_arr[j] != -1){
                 fprintf(writting_file, "%d;", aux_arr[j]);
-        
-        }
-            fprintf(writting_file, "%d ", aux_arr[j]);
+            }
+        }   
+            fprintf(writting_file, "|", aux_arr[j]);
 
    
         fclose(writting_file);
@@ -53,21 +63,21 @@ void carregar_dados(int M, char arquivos[M*2][20]) {
 int ler_numero(FILE *arquivo, int *fim_bloco, int *valor) {
     int ch;
     
-    if (fscanf(arquivo, "%d", valor) == EOF || *fim_bloco != 0) {
+    if (fscanf(arquivo, "%d;", valor) == EOF || *fim_bloco != 0) {
         printf("Valor_scanf: %d\n", *valor);
         return 0; // Fim do arquivo
     }
 
     *fim_bloco = 0;
     ch = fgetc(arquivo);
-    if (ch == ' ') {
+    if (ch == '|') {
         *fim_bloco = 1;
-    } 
+    } else{
+        ungetc(ch, arquivo);
+    }
     printf("Valor: %d\n", *valor);
     return 1;
 }
-
-
 
 
 int main() {
@@ -123,7 +133,7 @@ int main() {
     // Inicializa os buffers com o primeiro valor de cada bloco
     
     
-    for (int j = 0; j < 20; j++) {
+    for (int j = 0; j < 5; j++) {
         
         for (int i = 0; i < M; i++) {
             fim_bloco[i] = 0;
@@ -155,17 +165,20 @@ int main() {
             printf("MINIMO: %d\n", minimo_valor);
     
             // Lê o próximo número apenas do arquivo que forneceu o menor
-            if (ler_numero(leitura[minimo_idx], &fim_bloco[minimo_idx], &valores[minimo_idx])) {
-                ativos[minimo_idx] = 1;
+            if (fim_bloco[minimo_idx] == 0) {
+                if (ler_numero(leitura[minimo_idx], &fim_bloco[minimo_idx], &valores[minimo_idx])) {
+                    ativos[minimo_idx] = 1;
+                } else {
+                    ativos[minimo_idx] = 0;
+                }
             } else {
                 ativos[minimo_idx] = 0;
             }
-
             printf("Ativo: %d, FIM: %d, Valor: %d, Arquivo: %d\n", ativos[minimo_idx], fim_bloco[minimo_idx], valores[minimo_idx], leitura[minimo_idx]);
         }
     
         // Marca fim de bloco na saída
-        fprintf(escrita[escrita_atual], " ");
+        fprintf(escrita[escrita_atual], "|");
         escrita_atual = (escrita_atual + 1) % M;
     }
     
