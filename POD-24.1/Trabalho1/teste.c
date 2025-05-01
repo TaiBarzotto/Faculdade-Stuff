@@ -38,7 +38,6 @@ void carregar_dados(int M, char arquivos[M*2][20]) {
         int contador = 0;
         do {
             contador += fscanf(entrada, "%d", &aux_arr[i]);
-            printf("valor lid:%d\n",aux_arr[i]);
             i++;
         } while (fgetc(entrada) != EOF && contador<M);
 
@@ -60,11 +59,15 @@ void carregar_dados(int M, char arquivos[M*2][20]) {
 }
 
 
-int ler_numero(FILE *arquivo, int *fim_bloco, int *valor) {
+int ler_numero(FILE *arquivo, int *fim_bloco, int *valor, int *fim_arquivo) {
     int ch;
-    
-    if (fscanf(arquivo, "%d;", valor) == EOF || *fim_bloco != 0) {
-        printf("Valor_scanf: %d\n", *valor);
+    int result = fscanf(arquivo, "%d;", valor);
+    if ( result == EOF || *fim_bloco != 0) {
+        if (result == EOF) {
+            printf("EOF\n");
+            *fim_arquivo = 1;
+            *fim_bloco = 1;
+        }
         return 0; // Fim do arquivo
     }
 
@@ -75,7 +78,6 @@ int ler_numero(FILE *arquivo, int *fim_bloco, int *valor) {
     } else{
         ungetc(ch, arquivo);
     }
-    printf("Valor: %d\n", *valor);
     return 1;
 }
 
@@ -98,7 +100,6 @@ int main() {
         char nome_arquivo[20];
         sprintf(nome_arquivo, "F%d.txt", i+1);
         strcpy(arquivos[i], nome_arquivo);
-        printf("Arquivo %d: %s\n", i+1, arquivos[i]);
     }
 
     carregar_dados(M, arquivos);
@@ -126,21 +127,25 @@ int main() {
     int valores[M];
     int ativos[M];      // indica se o arquivo ainda tem dados no bloco atual
     int fim_bloco[M];   // indica se o arquivo chegou ao fim do bloco
+    int fim_arquivo[M]; // indica se o arquivo chegou ao fim do arquivo
     
     // Loop de intercalação por blocos
-    int blocos_ativos = 0;
+    int arquivos_completos = 0;
 
     // Inicializa os buffers com o primeiro valor de cada bloco
     
     
-    for (int j = 0; j < 5; j++) {
-        
+    while (arquivos_completos < M){
         for (int i = 0; i < M; i++) {
             fim_bloco[i] = 0;
             ativos[i]=1;
-            ler_numero(leitura[i], &fim_bloco[i], &valores[i]);
+            ler_numero(leitura[i], &fim_bloco[i], &valores[i], &fim_arquivo[i]);
+            if (fim_bloco[i] == 1) {
+                ativos[i] = 0;
+                arquivos_completos++;
+            } 
         }
-        printf("A\n");
+        printf("Arquivos completos: %d\n", arquivos_completos);
         // Intercala os blocos até todos terminarem
         while (1) {
             int minimo_valor = MEMORIA_MAX;
@@ -161,20 +166,20 @@ int main() {
     
             // Escreve no arquivo de saída
             fprintf(escrita[escrita_atual], "%d;", minimo_valor);
-            printf("Ativo: %d, FIM: %d, Valor: %d, Arquivo: %d\n", ativos[minimo_idx], fim_bloco[minimo_idx], valores[minimo_idx], leitura[minimo_idx]);
+            printf("ANTES: Ativo: %d, FIM: %d, Valor: %d, Arquivo: %d\n", ativos[minimo_idx], fim_bloco[minimo_idx], valores[minimo_idx], leitura[minimo_idx]);
             printf("MINIMO: %d\n", minimo_valor);
     
             // Lê o próximo número apenas do arquivo que forneceu o menor
             if (fim_bloco[minimo_idx] == 0) {
-                if (ler_numero(leitura[minimo_idx], &fim_bloco[minimo_idx], &valores[minimo_idx])) {
+                if (ler_numero(leitura[minimo_idx], &fim_bloco[minimo_idx], &valores[minimo_idx], &fim_arquivo[minimo_idx]) == 1) {
                     ativos[minimo_idx] = 1;
                 } else {
                     ativos[minimo_idx] = 0;
                 }
+                printf("DEPOIS: Ativo: %d, FIM: %d, Valor: %d, Arquivo: %d\n", ativos[minimo_idx], fim_bloco[minimo_idx], valores[minimo_idx], leitura[minimo_idx]);
             } else {
                 ativos[minimo_idx] = 0;
             }
-            printf("Ativo: %d, FIM: %d, Valor: %d, Arquivo: %d\n", ativos[minimo_idx], fim_bloco[minimo_idx], valores[minimo_idx], leitura[minimo_idx]);
         }
     
         // Marca fim de bloco na saída
@@ -186,4 +191,3 @@ int main() {
 
     return 0;
 }
-
