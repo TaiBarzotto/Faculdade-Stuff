@@ -15,9 +15,18 @@ int carregar_dados(int M, char arquivos[M*2][20]) {
         printf("Erro ao abrir o arquivo.\n");
     }
 
+    FILE **escrita = malloc(M * sizeof(FILE*));
+    for (int i = 0; i < M; i++) {
+        escrita[i] = fopen(arquivos[i], "w");
+        if (escrita[i] == NULL) {
+            printf("Erro ao abrir o arquivo %s.\n", arquivos[i + M]);
+            return 1;
+        }
+    } 
+    
     while(!feof(entrada)) {
         int i = 0, j =0; 
-        FILE *writting_file = fopen(arquivos[percorrer], "a+");
+        FILE *writting_file = escrita[percorrer];
         if (writting_file == NULL){
             printf("Erro ao abrir o arquivo.\n");
         }
@@ -53,9 +62,12 @@ int carregar_dados(int M, char arquivos[M*2][20]) {
         }   
             fprintf(writting_file, "|", aux_arr[j]);
 
-   
-        fclose(writting_file);
     }
+    for (int i = 0; i < M; i++)
+    {
+        fclose(escrita[i]);
+    }
+    
     fclose(entrada);
     return contador;
 }
@@ -63,9 +75,8 @@ int carregar_dados(int M, char arquivos[M*2][20]) {
 int ler_numero(FILE *arquivo, int *fim_bloco, int *valor, int *fim_arquivo) {
     int ch;
     int result = fscanf(arquivo, "%d;", valor);
-    if ( result == EOF || *fim_bloco != 0) {
+    if (result == EOF || *fim_bloco != 0) {
         if (result == EOF) {
-            printf("EOF\n");
             *fim_arquivo = 1;
             *fim_bloco = 1;
         }
@@ -88,24 +99,16 @@ void trabalha_files(int M, FILE **leitura, FILE **escrita, char arquivos[M*2][20
     int ativos[M];      // indica se o arquivo ainda tem dados no bloco atual
     int fim_bloco[M];   // indica se o arquivo chegou ao fim do bloco
     int fim_arquivo[M]; // indica se o arquivo chegou ao fim do arquivo
-    
-    // Loop de intercalação por blocos
     int arquivos_completos = 0;
 
-    // Inicializa os buffers com o primeiro valor de cada bloco
-    
-    
+    // Inicializa os buffers com o primeiro valor de cada bloco    
+    for (int i = 0; i < M; i++) {
+        fim_bloco[i] = 0;
+        fim_arquivo[i] = 0;
+        ativos[i]=1;
+        ler_numero(leitura[i], &fim_bloco[i], &valores[i], &fim_arquivo[i]);
+    }
     while (arquivos_completos < M){
-        for (int i = 0; i < M; i++) {
-            fim_bloco[i] = 0;
-            ativos[i]=1;
-            ler_numero(leitura[i], &fim_bloco[i], &valores[i], &fim_arquivo[i]);
-            if (fim_bloco[i] == 1) {
-                ativos[i] = 0;
-                arquivos_completos++;
-            } 
-        }
-        printf("Arquivos completos: %d\n", arquivos_completos);
         // Intercala os blocos até todos terminarem
         while (1) {
             int minimo_valor = MEMORIA_MAX;
@@ -126,18 +129,17 @@ void trabalha_files(int M, FILE **leitura, FILE **escrita, char arquivos[M*2][20
     
             // Escreve no arquivo de saída
             fprintf(escrita[escrita_atual], "%d;", minimo_valor);
-            printf("ANTES: Ativo: %d, FIM: %d, Valor: %d, Arquivo: %d\n", ativos[minimo_idx], fim_bloco[minimo_idx], valores[minimo_idx], leitura[minimo_idx]);
-            printf("MINIMO: %d\n", minimo_valor);
     
             // Lê o próximo número apenas do arquivo que forneceu o menor
-            if (fim_bloco[minimo_idx] == 0) {
+            if (fim_bloco[minimo_idx] == 0 ) {
                 if (ler_numero(leitura[minimo_idx], &fim_bloco[minimo_idx], &valores[minimo_idx], &fim_arquivo[minimo_idx]) == 1) {
                     ativos[minimo_idx] = 1;
                 } else {
+                    fim_bloco[minimo_idx] = 1;
                     ativos[minimo_idx] = 0;
                 }
-                printf("DEPOIS: Ativo: %d, FIM: %d, Valor: %d, Arquivo: %d\n", ativos[minimo_idx], fim_bloco[minimo_idx], valores[minimo_idx], leitura[minimo_idx]);
             } else {
+                fim_bloco[minimo_idx] = 1;
                 ativos[minimo_idx] = 0;
             }
         }
@@ -145,6 +147,17 @@ void trabalha_files(int M, FILE **leitura, FILE **escrita, char arquivos[M*2][20
         // Marca fim de bloco na saída
         fprintf(escrita[escrita_atual], "|");
         escrita_atual = (escrita_atual + 1) % M;
+        for (int i = 0; i < M; i++) {
+            fim_bloco[i] = 0;
+            fim_arquivo[i] = 0;
+            ativos[i]=1;
+            ler_numero(leitura[i], &fim_bloco[i], &valores[i], &fim_arquivo[i]);
+            if (fim_arquivo[i] == 1) {
+                ativos[i] = 0;
+                fim_bloco[i] = 1;
+                arquivos_completos++;
+            } 
+        }
     }
 
     for (int i = 0; i < M; i++) {
