@@ -181,8 +181,7 @@ int main() {
     FILE **escrita = malloc(M * sizeof(FILE*));
     FILE **leitura = malloc(M * sizeof(FILE*));
 
-    for (int i = 0; i <= M+3; i++)
-    {
+    while (contador_eof < M-1){
         if(flag_vez == 0){
             for (int i = 0; i < M; i++) {
                 leitura[i] = fopen(arquivos[i], "r");
@@ -229,15 +228,13 @@ int main() {
                 }
                 char c;
                 c = fgetc(escrita[i]);
-                if (c != EOF && c != '|') {
+                if (c == EOF || c == '|') {
                     contador_eof++;
                 } 
                 fclose(escrita[i]);
             }
-            printf("Contador EOF escreve 2°: %d\n", contador_eof);
-            if (contador_eof == 1) {
-                printf("Foi ordenado. Somente um arquivo contem texto\n");
-                break;
+            if (contador_eof == M-1) {
+                printf("Foi ordenado.\nArquivo resultante: %s\n", arquivos[0+M]);
             } else {
                 contador_eof = 0;
             }
@@ -250,16 +247,14 @@ int main() {
                 }
                 char c;
                 c = fgetc(escrita[i]);
-                if (c != EOF && c != '|') {
+                if (c == EOF || c == '|') {
                     contador_eof++;
                 } 
                 fclose(escrita[i]);
             }
-            printf("Contador EOF escreve 1°: %d\n", contador_eof);
 
-            if (contador_eof == 1) {
-                printf("Foi ordenado. Somente um arquivo contem texto\n");
-                break;
+            if (contador_eof == M-1) {                
+                printf("Foi ordenado.\nArquivo resultante: %s\n", arquivos[0]);
             } else {
                 contador_eof = 0;
             }
