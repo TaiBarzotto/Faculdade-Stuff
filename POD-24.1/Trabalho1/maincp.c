@@ -82,21 +82,7 @@ int ler_numero(FILE *arquivo, int *fim_bloco, int *valor, int *fim_arquivo) {
     return 1;
 }
 
-void ler_primer_parte(int M, FILE **leitura, FILE **escrita, char arquivos[M*2][20]) {
-    for (int i = 0; i < M; i++) {
-        leitura[i] = fopen(arquivos[i], "r");
-        if (leitura[i] == NULL) {
-            printf("Erro ao abrir o arquivo %s.\n", arquivos[i]);
-        }
-    }
-    
-    for (int i = 0; i < M; i++) {
-        escrita[i] = fopen(arquivos[i + M], "w");
-        if (escrita[i] == NULL) {
-            printf("Erro ao abrir o arquivo %s.\n", arquivos[i + M]);
-        }
-    } 
-    
+void trabalha_files(int M, FILE **leitura, FILE **escrita, char arquivos[M*2][20]) {
     int escrita_atual = 0;
     int valores[M];
     int ativos[M];      // indica se o arquivo ainda tem dados no bloco atual
@@ -166,99 +152,13 @@ void ler_primer_parte(int M, FILE **leitura, FILE **escrita, char arquivos[M*2][
         fclose(escrita[i]);
         
     }
-}
-
-void ler_seg_parte(int M, FILE **leitura, FILE **escrita, char arquivos[M*2][20]) {
-    for (int i = 0; i < M; i++) {
-        leitura[i] = fopen(arquivos[i+M], "r");
-        if (leitura[i] == NULL) {
-            printf("Erro ao abrir o arquivo %s.\n", arquivos[i]);
-        }
-    }
-    
-    for (int i = 0; i < M; i++) {
-        escrita[i] = fopen(arquivos[i], "w");
-        if (escrita[i] == NULL) {
-            printf("Erro ao abrir o arquivo %s.\n", arquivos[i + M]);
-        }
-    } 
-    
-    int escrita_atual = 0;
-    int valores[M];
-    int ativos[M];      // indica se o arquivo ainda tem dados no bloco atual
-    int fim_bloco[M];   // indica se o arquivo chegou ao fim do bloco
-    int fim_arquivo[M]; // indica se o arquivo chegou ao fim do arquivo
-    
-    // Loop de intercalação por blocos
-    int arquivos_completos = 0;
-
-    // Inicializa os buffers com o primeiro valor de cada bloco
-    
-    
-    while (arquivos_completos < M){
-        for (int i = 0; i < M; i++) {
-            fim_bloco[i] = 0;
-            ativos[i]=1;
-            ler_numero(leitura[i], &fim_bloco[i], &valores[i], &fim_arquivo[i]);
-            if (fim_bloco[i] == 1) {
-                ativos[i] = 0;
-                arquivos_completos++;
-            } 
-        }
-        printf("Arquivos completos: %d\n", arquivos_completos);
-        // Intercala os blocos até todos terminarem
-        while (1) {
-            int minimo_valor = MEMORIA_MAX;
-            int minimo_idx = -1;
-
-            // Encontra o menor valor entre os arquivos ainda ativos
-            for (int i = 0; i < M; i++) {
-                if (ativos[i]==1 && valores[i] < minimo_valor) {
-                    minimo_valor = valores[i];
-                    minimo_idx = i;
-                }
-            }
-    
-            // Todos os blocos chegaram ao fim?
-            if (minimo_idx == -1) {
-                break;
-            }
-    
-            // Escreve no arquivo de saída
-            fprintf(escrita[escrita_atual], "%d;", minimo_valor);
-            printf("ANTES: Ativo: %d, FIM: %d, Valor: %d, Arquivo: %d\n", ativos[minimo_idx], fim_bloco[minimo_idx], valores[minimo_idx], leitura[minimo_idx]);
-            printf("MINIMO: %d\n", minimo_valor);
-    
-            // Lê o próximo número apenas do arquivo que forneceu o menor
-            if (fim_bloco[minimo_idx] == 0) {
-                if (ler_numero(leitura[minimo_idx], &fim_bloco[minimo_idx], &valores[minimo_idx], &fim_arquivo[minimo_idx]) == 1) {
-                    ativos[minimo_idx] = 1;
-                } else {
-                    ativos[minimo_idx] = 0;
-                }
-                printf("DEPOIS: Ativo: %d, FIM: %d, Valor: %d, Arquivo: %d\n", ativos[minimo_idx], fim_bloco[minimo_idx], valores[minimo_idx], leitura[minimo_idx]);
-            } else {
-                ativos[minimo_idx] = 0;
-            }
-        }
-    
-        // Marca fim de bloco na saída
-        fprintf(escrita[escrita_atual], "|");
-        escrita_atual = (escrita_atual + 1) % M;
-    }
-    for (int i = 0; i < M; i++) {
-        fclose(leitura[i]);
-        fclose(escrita[i]);
-        
-    }
-
 }
 
 
 int main() {
-
-    int val_ini;
+    int flag_vez = 0; // 0- estou lendo a 1° metade e escrevendo na 2°
     int M;
+    int contador_eof = 0;
     char c;
     printf("Digite a quantidade de elementos a serem carregados por vez em memória (M): ");
     scanf("%d", &M);
@@ -281,8 +181,94 @@ int main() {
     FILE **escrita = malloc(M * sizeof(FILE*));
     FILE **leitura = malloc(M * sizeof(FILE*));
 
-    ler_primer_parte(M, leitura, escrita, arquivos);
-    ler_seg_parte(M, leitura, escrita, arquivos);
+    for (int i = 0; i <= M+3; i++)
+    {
+        if(flag_vez == 0){
+            for (int i = 0; i < M; i++) {
+                leitura[i] = fopen(arquivos[i], "r");
+                if (leitura[i] == NULL) {
+                    printf("Erro ao abrir o arquivo %s.\n", arquivos[i]);
+                    return 1;
+                }
+            }
+            
+            for (int i = 0; i < M; i++) {
+                escrita[i] = fopen(arquivos[i + M], "w");
+                if (escrita[i] == NULL) {
+                    printf("Erro ao abrir o arquivo %s.\n", arquivos[i + M]);
+                    return 1;
+                }
+            } 
+        }else
+        {
+            for (int i = 0; i < M; i++) {
+                leitura[i] = fopen(arquivos[i+M], "r");
+                if (leitura[i] == NULL) {
+                    printf("Erro ao abrir o arquivo %s.\n", arquivos[i]);
+                    return 1;
+                }
+            }
+            
+            for (int i = 0; i < M; i++) {
+                escrita[i] = fopen(arquivos[i], "w");
+                if (escrita[i] == NULL) {
+                    printf("Erro ao abrir o arquivo %s.\n", arquivos[i + M]);
+                    return 1;
+                }
+            } 
+        }
+        
+        trabalha_files(M, leitura, escrita, arquivos);
+
+        if(flag_vez == 0){
+            for (int i = 0; i < M; i++) {
+                escrita[i] = fopen(arquivos[i + M], "r"); //Abrir os arquivos de escrita para ver oq escreveu em cada
+                if (escrita[i] == NULL) {
+                    printf("Erro ao abrir o arquivo %s.\n", arquivos[i + M]);
+                    return 1;
+                }
+                char c;
+                c = fgetc(escrita[i]);
+                if (c != EOF && c != '|') {
+                    contador_eof++;
+                } 
+                fclose(escrita[i]);
+            }
+            printf("Contador EOF escreve 2°: %d\n", contador_eof);
+            if (contador_eof == 1) {
+                printf("Foi ordenado. Somente um arquivo contem texto\n");
+                break;
+            } else {
+                contador_eof = 0;
+            }
+        }else{
+            for (int i = 0; i < M; i++) {
+                escrita[i] = fopen(arquivos[i], "r"); //Abrir os arquivos de escrita para ver oq escreveu em cada
+                if (escrita[i] == NULL) {
+                    printf("Erro ao abrir o arquivo %s.\n", arquivos[i + M]);
+                    return 1;
+                }
+                char c;
+                c = fgetc(escrita[i]);
+                if (c != EOF && c != '|') {
+                    contador_eof++;
+                } 
+                fclose(escrita[i]);
+            }
+            printf("Contador EOF escreve 1°: %d\n", contador_eof);
+
+            if (contador_eof == 1) {
+                printf("Foi ordenado. Somente um arquivo contem texto\n");
+                break;
+            } else {
+                contador_eof = 0;
+            }
+        }
+        flag_vez = (flag_vez + 1) % 2;
+        
+    }
+    
+    
 
 
     return 0;
