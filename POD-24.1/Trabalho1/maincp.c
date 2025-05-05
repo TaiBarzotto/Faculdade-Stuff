@@ -93,7 +93,7 @@ int ler_numero(FILE *arquivo, int *fim_bloco, int *valor, int *fim_arquivo) {
     return 1;
 }
 
-void trabalha_files(int M, FILE **leitura, FILE **escrita, char arquivos[M*2][20]) {
+void intercala_arquivos(int M, FILE **leitura, FILE **escrita, char arquivos[M*2][20]) {
     int escrita_atual = 0;
     int valores[M];
     int ativos[M];      // indica se o arquivo ainda tem dados no bloco atual
@@ -230,7 +230,7 @@ int main() {
             } 
         }
         
-        trabalha_files(M, leitura, escrita, arquivos);
+        intercala_arquivos(M, leitura, escrita, arquivos);
 
         if(flag_vez == 0){
             for (int i = 0; i < M; i++) {
