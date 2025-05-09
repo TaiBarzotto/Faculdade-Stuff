@@ -61,7 +61,7 @@ int carregar_dados(int M, char arquivos[M][20]) {
                 contador++;
             }
         }   
-        fprintf(writting_file, "|", aux_arr[j]);
+        fprintf(writting_file, " ", aux_arr[j]);
 
     }
     for (int i = 0; i < M; i++)
@@ -86,7 +86,7 @@ int ler_numero(FILE *arquivo, int *fim_bloco, int *valor, int *fim_arquivo) {
     
     *fim_bloco = 0;
     ch = fgetc(arquivo);
-    if (ch == '|') { // Separador de fim de bloco
+    if (ch == ' ') { // Separador de fim de bloco
         *fim_bloco = 1;
     } else{
         ungetc(ch, arquivo); // Devolve o caractere lido para o arquivo (volta o cursor para o caractere lido)
@@ -149,7 +149,7 @@ void intercala_arquivos(int M, FILE **leitura, FILE **escrita) {
         }
     
         // Marca fim de bloco na saída
-        fprintf(escrita[escrita_atual], "|");
+        fprintf(escrita[escrita_atual], " ");
         escrita_atual = (escrita_atual + 1) % M;
         
         // Le os primeiros valores do proximo bloco de leitura e verifica se os arquivos chegaram ao fim
@@ -201,7 +201,11 @@ int main() {
     }
 
     carregar_dados(M, bloco_arquivos1); // Carregar os dados do arquivo dados.txt para os arquivos do bloco_arquivos1 (primeira metade)
-
+    FILE *check_ordenado = fopen(bloco_arquivos1[1], "r"); // Verifica se tem outros blocos para serem ordenados
+    if (feof(check_ordenado) == 0) { // Se o arquivo estiver vazio, não tem nada para ordenar
+        printf("Foi ordenado.\nArquivo resultante: %s\n", bloco_arquivos1[0]);
+        return 0;
+    }
     // Ponteiros para armazenar as referências dos arquivos abertos
     FILE **escrita = malloc(M * sizeof(FILE*));
     FILE **leitura = malloc(M * sizeof(FILE*));
@@ -246,7 +250,7 @@ int main() {
                     return 1;
                 }
                 c = fgetc(escrita[i]);
-                if (c == EOF || c == '|') { // Se o arquivo estiver vazio ou se for só uma marca de fim do bloco
+                if (c == EOF || c == ' ') { // Se o arquivo estiver vazio ou se for só uma marca de fim do bloco
                     contador_eof++;
                 } 
                 fclose(escrita[i]);
@@ -264,7 +268,7 @@ int main() {
                     return 1;
                 }
                 c = fgetc(escrita[i]);
-                if (c == EOF || c == '|') { // Se o arquivo estiver vazio ou se for só uma marca de fim do bloco
+                if (c == EOF || c == ' ') { // Se o arquivo estiver vazio ou se for só uma marca de fim do bloco
                     contador_eof++;
                 } 
                 fclose(escrita[i]);
@@ -277,7 +281,6 @@ int main() {
             }
         }
         flag_vez = (flag_vez + 1) % 2;
-        
     }
     
     
