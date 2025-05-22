@@ -15,7 +15,7 @@ typedef struct sentinela
     Lista *tail;
 } Slista;
 
-void insere_pilha(Slista *s, int value){
+void insere_lista(Slista *s, int value){
     Lista *aux = malloc(sizeof(Lista));
     aux->valor = value;
     aux->next = NULL;
@@ -41,7 +41,7 @@ void hash01(int M, FILE *entrada, Slista *hash){
         result = fscanf(entrada, "%d;", &c);
         if (result == EOF) break;
         mod = c%M;
-        insere_pilha(&hash[mod],c);
+        insere_lista(&hash[mod],c);
     }
 }
 
@@ -59,6 +59,38 @@ void print_hash01(int M, Slista *hash){
     }
 
 }
+
+void hash02(int M, int *hash, FILE *entrada){
+    int value, mod;
+    for (int i = 0; i < M; i++)
+    {
+        hash[i] = -1;
+    }
+
+    while (fscanf(entrada, "%d;", &value)!=EOF)
+    {
+        mod = value%M;
+        while (hash[mod]!=-1)
+        {
+            if(hash[mod]==-1)break;
+            mod = (mod + 1)%M;
+        }
+        hash[mod] = value;
+    }
+}
+
+void print_hash02(int M, int *hash){
+    for (int i = 0; i < M; i++)
+    {
+        printf("%d: ", i);
+        if (hash[i]!=-1)
+        {
+            printf("%d", hash[i]);
+        }
+        printf("\n");
+    }
+}
+
 int main(){
     int M, tipo;
     FILE *entrada = fopen("dados.txt", "r");
@@ -73,35 +105,10 @@ int main(){
         print_hash01(M, hash1);
     }
     else{
-        int hash2[M], value, mod;
-        for (int i = 0; i < M; i++)
-        {
-            hash2[i] = -1;
-        }
-
-        while (fscanf(entrada, "%d;", &value)!=EOF)
-        {
-            mod = value%M;
-            while (hash2[mod]!=-1)
-            {
-                printf("Debug1\n");
-                if(hash2[mod]==-1)break;
-                mod = (mod + 1)%M;
-            }
-            hash2[mod] = value;
-        }
-
-        for (int i = 0; i < M; i++)
-        {
-            printf("%d: ", i);
-            if (hash2[i]!=-1)
-            {
-                printf("%d", i, hash2[i]);
-            }
-            printf("\n");
-        }
+        int hash2[M];
+        hash02(M, hash2, entrada);
+        print_hash02(M, hash2);
     }
 
-    
     return 0;    
 }
