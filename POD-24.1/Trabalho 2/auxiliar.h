@@ -1,6 +1,8 @@
 #include <stdio.h>
 #ifndef AUXILIAR_H
 #define AUXILIAR_H
+
+// Estruturas de lista e sentinela
 typedef struct lista
 {
     int valor;
@@ -13,6 +15,7 @@ typedef struct sentinela
     Lista *tail;
 } Slista;
 
+// Cabeçalho das funções
 void insere_lista(Slista *s, int value);
 void hash_fechado(int M, FILE *entrada, Slista *hash);
 void print_hash_fechado(int M, Slista *hash);
