@@ -13,7 +13,10 @@ import Lexer
     true            { TokenTrue }
     false           { TokenFalse }
     '+'             { TokenAdd }
+    '-'             { TokenSub }
+    '*'             { TokenMult }
     "&&"            { TokenAnd }
+    "||"            { TokenOr }
     if              { TokenIf }
     then            { TokenThen }
     else            { TokenElse }
@@ -25,9 +28,11 @@ import Lexer
     Boolean         { TokenTBool }
     let             { TokenLet }
     in              { TokenIn }
+    "=="            { TokenEqual }
     '='             { TokenIgual }
     '('             { TokenLParen }
     ')'             { TokenRParen }
+    "!="            { TokenDiff }
 
 %nonassoc if then else 
 %nonassoc '\\' 
@@ -40,7 +45,12 @@ Exp     : num                           { Num $1 }
         | true                          { BTrue }
         | false                         { BFalse }
         | Exp '+' Exp                   { Add $1 $3 }
+        | Exp '-' Exp                   { Sub $1 $3 }
+        | Exp '*' Exp                   { Mult $1 $3 }
         | Exp "&&" Exp                  { And $1 $3 }
+        | Exp "||" Exp                  { Or $1 $3 }
+        | Exp "==" Exp                  { Equal $1 $3 }
+        | Exp "!=" Exp                  { Diff $1 $3 }
         | if Exp then Exp else Exp      { If $2 $4 $6 }
         | var                           { Var $1 }
         | '\\' var ':' Type "->" Exp    { Lam $2 $4 $6 }

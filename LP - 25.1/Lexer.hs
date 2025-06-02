@@ -1,18 +1,25 @@
+{-# OPTIONS_GHC -Wno-overlapping-patterns #-}
 module Lexer where 
 
 import Data.Char
+import Language.Haskell.TH (Exp)
 
 data Expr = BTrue 
           | BFalse 
           | Num Int 
           | Add Expr Expr 
+          | Sub Expr Expr
+          | Mult Expr Expr
           | And Expr Expr 
+          | Or Expr Expr
           | If Expr Expr Expr 
           | Var String 
           | Lam String Ty Expr 
           | App Expr Expr 
           | Paren Expr 
           | Let String Expr Expr
+          | Diff Expr Expr
+          | Equal Expr Expr
           deriving Show 
 
 data Ty = TBool 
@@ -24,7 +31,10 @@ data Token = TokenTrue
            | TokenFalse 
            | TokenNum Int 
            | TokenAdd 
+           | TokenSub
+           | TokenMult
            | TokenAnd 
+           | TokenOr 
            | TokenIf 
            | TokenThen
            | TokenElse 
@@ -39,18 +49,25 @@ data Token = TokenTrue
            | TokenLet
            | TokenIn
            | TokenIgual
+           | TokenEqual
+           | TokenDiff
            deriving Show 
 
 lexer :: String -> [Token]
 lexer [] = [] 
 lexer ('+':cs) = TokenAdd : lexer cs 
+lexer ('-':cs) = TokenSub : lexer cs 
+lexer ('*':cs) = TokenMult : lexer cs 
 lexer ('\\':cs) = TokenLam : lexer cs 
 lexer (':':cs) = TokenColon : lexer cs 
 lexer ('(':cs) = TokenLParen : lexer cs 
 lexer (')':cs) = TokenRParen : lexer cs 
+lexer ('=':'=':cs) = TokenEqual : lexer cs 
 lexer ('=':cs) = TokenIgual : lexer cs
 lexer ('&':'&':cs) = TokenAnd : lexer cs 
+lexer ('|':'|':cs) = TokenOr : lexer cs 
 lexer ('-':'>':cs) = TokenArrow : lexer cs 
+lexer ('!':'=':cs) = TokenDiff : lexer cs 
 lexer (c:cs) | isSpace c = lexer cs 
              | isDigit c = lexNum (c:cs) 
              | isAlpha c = lexKW (c:cs)
