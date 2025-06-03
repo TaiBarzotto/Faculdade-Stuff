@@ -51,6 +51,9 @@ step (And BFalse e2) = BFalse
 step (And e1 e2) = And (step e1) e2 
 step (Or BFalse e2) = e2 
 step (Or BTrue e2) = BTrue
+step (Not BTrue) = BFalse 
+step (Not BFalse) = BTrue
+step (Not e) = Not (step e)
 step (Or e1 e2) = Or (step e1) e2 
 step (Equal (Num n1) (Num n2)) | n1 == n2 = BTrue
                                | otherwise = BFalse
