@@ -61,13 +61,26 @@ typeof ctx (App e1 e2) =
     _ -> Nothing 
 typeof ctx (Paren e) = typeof ctx e 
 typeof ctx (Let x e1 e2) = case typeof ctx e1 of
-                            Just t1 -> let ctx' = (x, t1) : ctx in 
-                                      case typeof ctx' e2 of 
-                                        Just t2 -> Just (TFun t1 t2)
-                                        _       -> Nothing 
-                            _ -> Nothing
+    Just t1 -> typeof ((x, t1) : ctx) e2
+    _       -> Nothing
 
-                             
+typeof ctx Null = Just (TList TNum)                 
+typeof ctx (Cons h t) = 
+    case (typeof ctx h, typeof ctx t) of
+        (Just t1, Just (TList t2)) | t1 == t2 -> Just (TList t1)
+        _ -> Nothing
+typeof ctx (IsNull e) = 
+    case typeof ctx e of
+        Just (TList _) -> Just TBool
+        _              -> Nothing
+typeof ctx (Head e) =
+    case typeof ctx e of
+        Just (TList t) -> Just t
+        _ -> Nothing
+typeof ctx (Tail e) =
+    case typeof ctx e of
+        Just (TList t) -> Just (TList t)
+        _ -> Nothing
 
 typecheck :: Expr -> Expr  
 typecheck e = case typeof [] e of 

@@ -9,6 +9,8 @@ isValue BTrue       = True
 isValue BFalse      = True  
 isValue (Num _)     = True 
 isValue (Lam _ _ _) = True
+isValue Null = True
+isValue (Cons h t) = isValue h && isValue t
 isValue _           = False 
 
 subst :: String -> Expr -> Expr -> Expr
@@ -30,10 +32,9 @@ subst v e (Var x) = if v == x then
 subst v e (Lam x t b) = Lam x t (subst v e b)
 subst v e (App e1 e2) = App (subst v e e1) (subst v e e2)
 subst v e (Paren e1) = Paren (subst v e e1)
-subst v e (Let x e1 e2) = if v == x then 
-                            (subst x e1 e2)
-                          else 
-                            Let x e1 e2
+subst v e (Let x e1 e2)
+  | v == x    = Let x (subst v e e1) e2 
+  | otherwise = Let x (subst v e e1) (subst v e e2)
 
 
 step :: Expr -> Expr 
@@ -74,8 +75,20 @@ step (App e1@(Lam x t b) e2) | isValue e2 = subst x e2 b
                              | otherwise  = App e1 (step e2)
 step (App e1 e2) = App (step e1) e2 
 step (Paren e) = e 
-step (Let v (Num n1) e2) = (subst v (Num n1) e2) 
-step (Let v e1 e2) = Let v (step e1) e2
+step (Let v e1 e2)
+  | isValue e1 = subst v e1 e2
+  | otherwise  = Let v (step e1) e2
+step (IsNull Null) = BTrue
+step (IsNull (Cons _ _)) = BFalse
+step (IsNull e) = IsNull (step e)
+step (Head (Cons h _)) = h
+step (Head e) = Head (step e)
+step (Tail (Cons _ t)) = t
+step (Tail e) = Tail (step e)
+step (Cons h t)
+  | isValue h = Cons h (step t)
+  | otherwise = Cons (step h) t
+step e = error $ "step: expressão não tratada: " ++ show e
 
 eval :: Expr -> Expr 
 eval e | isValue e = e 

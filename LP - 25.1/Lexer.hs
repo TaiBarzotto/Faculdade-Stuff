@@ -21,11 +21,17 @@ data Expr = BTrue
           | Let String Expr Expr
           | Diff Expr Expr
           | Equal Expr Expr
-          deriving Show 
+          | Null 
+          | Cons Expr Expr
+          | IsNull Expr 
+          | Head Expr
+          | Tail Expr
+          deriving Show
 
 data Ty = TBool 
         | TNum 
-        | TFun Ty Ty 
+        | TFun Ty Ty
+        | TList Ty 
         deriving (Show, Eq)
 
 data Token = TokenTrue 
@@ -53,6 +59,12 @@ data Token = TokenTrue
            | TokenIgual
            | TokenEqual
            | TokenDiff
+           | TokenLColch
+           | TokenRColch
+           | TokenVirgula
+           | TokenIsNull
+           | TokenHead
+           | TokenTail
            deriving Show 
 
 lexer :: String -> [Token]
@@ -71,6 +83,9 @@ lexer ('|':'|':cs) = TokenOr : lexer cs
 lexer ('-':'>':cs) = TokenArrow : lexer cs 
 lexer ('!':'=':cs) = TokenDiff : lexer cs 
 lexer ('!':cs) = TokenNot : lexer cs 
+lexer ('[':cs) = TokenLColch : lexer cs
+lexer (']':cs) = TokenRColch : lexer cs
+lexer (',':cs) = TokenVirgula : lexer cs
 lexer (c:cs) | isSpace c = lexer cs 
              | isDigit c = lexNum (c:cs) 
              | isAlpha c = lexKW (c:cs)
@@ -90,5 +105,8 @@ lexKW cs = case span isAlpha cs of
              ("Boolean", rest) -> TokenTBool : lexer rest 
              ("let", rest) -> TokenLet : lexer rest
              ("in", rest) -> TokenIn: lexer rest
+             ("isNull", rest) -> TokenIsNull : lexer rest
+             ("head", rest) -> TokenHead : lexer rest
+             ("tail", rest) -> TokenTail : lexer rest
              (var, rest) -> TokenVar var : lexer rest 
  

@@ -34,15 +34,27 @@ import Lexer
     ')'             { TokenRParen }
     "!="            { TokenDiff }
     '!'             { TokenNot }
+    '['             { TokenLColch }
+    ']'             { TokenRColch }
+    ','             { TokenVirgula }
+    head            { TokenHead }
+    tail            { TokenTail }
+    isNull          { TokenIsNull }
+
 
 %nonassoc if then else 
 %nonassoc '\\' 
-%left '+' 
+%left '+' '-'
+%left '*' 
 %left "&&"
 
 %% 
 
-Exp     : num                           { Num $1 }
+Exp     : '[' ListItems ']'             { $2 }
+        | num                           { Num $1 }
+        | head Exp                      { Head $2 }
+        | tail Exp                      { Tail $2 }
+        | isNull Exp                    { IsNull $2 }
         | true                          { BTrue }
         | false                         { BFalse }
         | Exp '+' Exp                   { Add $1 $3 }
@@ -60,9 +72,16 @@ Exp     : num                           { Num $1 }
         | '(' Exp ')'                   { Paren $2 }
         | let var '=' Exp in Exp        { Let $2 $4 $6 }
 
+
 Type    : Boolean                       { TBool }
         | Number                        { TNum }
         | '(' Type "->" Type ')'        { TFun $2 $4 }
+
+
+
+ListItems :                      { Null }
+          | Exp                  { Cons $1 Null }
+          | Exp ',' ListItems    { Cons $1 $3 }
 
 { 
 
