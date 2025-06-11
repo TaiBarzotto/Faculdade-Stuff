@@ -2,7 +2,6 @@
 module Lexer where 
 
 import Data.Char
-import Language.Haskell.TH (Exp)
 
 data Expr = BTrue 
           | BFalse 

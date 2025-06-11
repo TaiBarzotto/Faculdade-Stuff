@@ -1,8 +1,6 @@
 module Interpreter where 
 
 import Lexer 
-import Lexer (Expr(Or, BTrue, Equal, Diff, BFalse), Ty (TBool))
-import Data.Bool (otherwise)
 
 isValue :: Expr -> Bool 
 isValue BTrue       = True 

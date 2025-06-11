@@ -1,8 +1,6 @@
 module TypeChecker where 
 
 import Lexer 
-import Lexer (Expr(Equal), Ty (TBool))
-import Distribution.Compiler (CompilerFlavor(JHC))
 
 type Ctx = [(String, Ty)]
 
