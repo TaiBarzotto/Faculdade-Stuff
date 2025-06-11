@@ -33,6 +33,11 @@ subst v e (Paren e1) = Paren (subst v e e1)
 subst v e (Let x e1 e2)
   | v == x    = Let x (subst v e e1) e2 
   | otherwise = Let x (subst v e e1) (subst v e e2)
+subst v e Null = Null
+subst v e (Cons h t) = Cons (subst v e h) (subst v e t)
+subst v e (Head l) = Head (subst v e l)
+subst v e (Tail l) = Tail (subst v e l)
+subst v e (IsNil l) = IsNil (subst v e l)
 
 
 step :: Expr -> Expr 
@@ -86,7 +91,6 @@ step (Tail e) = Tail (step e)
 step (Cons h t)
   | isValue h = Cons h (step t)
   | otherwise = Cons (step h) t
-step e = error $ "step: expressão não tratada: " ++ show e
 
 eval :: Expr -> Expr 
 eval e | isValue e = e 

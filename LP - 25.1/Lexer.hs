@@ -58,7 +58,7 @@ data Token = TokenTrue
            | TokenIgual
            | TokenEqual
            | TokenDiff
-           | TokenLColch
+           | TokenLColch  
            | TokenRColch
            | TokenVirgula
            | TokenIsNull
