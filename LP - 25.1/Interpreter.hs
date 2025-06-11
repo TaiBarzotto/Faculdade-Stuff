@@ -37,7 +37,7 @@ subst v e Null = Null
 subst v e (Cons h t) = Cons (subst v e h) (subst v e t)
 subst v e (Head l) = Head (subst v e l)
 subst v e (Tail l) = Tail (subst v e l)
-subst v e (IsNil l) = IsNil (subst v e l)
+subst v e (IsNull l) = IsNull (subst v e l)
 
 
 step :: Expr -> Expr 
