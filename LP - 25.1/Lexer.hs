@@ -21,7 +21,7 @@ data Expr = BTrue
           | Diff Expr Expr
           | Equal Expr Expr
           | Null 
-          | Cons Expr Expr
+          | Cons Expr Expr 
           | IsNull Expr 
           | Head Expr
           | Tail Expr
@@ -58,7 +58,7 @@ data Token = TokenTrue
            | TokenIgual
            | TokenEqual
            | TokenDiff
-           | TokenLColch  
+           | TokenLColch -- [1,2,3]
            | TokenRColch
            | TokenVirgula
            | TokenIsNull
