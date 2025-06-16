@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
-#define num_ponteiros 5
+#define NUMERO_PONT_ARV 5
 
 typedef struct node {
     int is_leaf; // 1 se for folha, 0 se for nó
@@ -8,8 +8,8 @@ typedef struct node {
     int num_ponteiro; // número de ponteiros no nó
 
     // chaves e ponteiros são arrays de tamanho num_ponteiros-1 e num_ponteiros, respectivamente
-    int chaves[num_ponteiros-1];
-    struct node *ponteiros[num_ponteiros];
+    int chaves[NUMERO_PONT_ARV-1];
+    struct node *ponteiros[NUMERO_PONT_ARV];
     struct node *next; // próximo nó (usado para folhas)
     struct node *parent; // nó pai (usado para nós)
 } Node;
@@ -33,8 +33,8 @@ Node *criar_no(int is_leaf) {
     no->next = NULL;
     no->parent = NULL;
 
-    for (int i = 0; i < num_ponteiros - 1; i++) no->chaves[i] = 0;
-    for (int i = 0; i < num_ponteiros; i++) no->ponteiros[i] = NULL;
+    for (int i = 0; i < NUMERO_PONT_ARV - 1; i++) no->chaves[i] = 0;
+    for (int i = 0; i < NUMERO_PONT_ARV; i++) no->ponteiros[i] = NULL;
     return no;
 }
 
@@ -56,6 +56,55 @@ Node *buscar_no(Node *no, int value) {
     }
 }
 
+void printArray(int *array, int size) {
+    printf("\nDEBUG - PRINT CHAVES\n");
+  for (int i = 0; i < size; i++) {
+    printf("%d ", array[i]);
+  }
+  printf("\n");
+}
+
+void insertOrdered(int *array, int *size, int key) {
+    int i = *size - 1;
+
+    while (i >= 0 && array[i] > key) {
+        array[i + 1] = array[i];
+        i--;
+    }
+    array[i + 1] = key;
+
+    (*size)++;
+}
+
+void dividir_vetor(int *metade1, int *metade2, int new_key){
+    int j = 0;
+    int k = 0;
+    for (k = 0; k < NUMERO_PONT_ARV; k++)
+    {
+        if (metade1[k]<new_key) break;
+    }
+    
+    for (int i = NUMERO_PONT_ARV/2; i < NUMERO_PONT_ARV - 1; i++)
+    {
+        printf("DEBUG - Metade1[%d] = %d\n", i, metade1[i]);
+        metade2[j++]=metade1[i];
+        metade1[i]=0;
+    }
+
+    if (k>NUMERO_PONT_ARV/2)
+    {
+        int tamanho = 0;
+        if (NUMERO_PONT_ARV%2==0){
+            tamanho = NUMERO_PONT_ARV/2;
+        } else{ 
+            tamanho = NUMERO_PONT_ARV/2+1;
+        }
+        insertOrdered(metade2, &tamanho, new_key);
+    }
+    
+    
+}
+
 void inserir_no(BTree *arvore, int value) {
     if (arvore->raiz == NULL) {
         arvore->raiz = criar_no(1); // Cria a raiz como um nó folha
@@ -66,8 +115,10 @@ void inserir_no(BTree *arvore, int value) {
 
     Node *no_inserir = buscar_no(arvore->raiz, value);
     if (no_inserir != NULL) {
-        if (no_inserir->num_chaves >= num_ponteiros-1){
-            printf("dividir e promover\n");
+        if (no_inserir->num_chaves >= NUMERO_PONT_ARV-1){
+            int values[NUMERO_PONT_ARV];
+            dividir_vetor(no_inserir->chaves, values, value);
+            return;
         }
         int i = 0;
         while (value > no_inserir->chaves[i]) {
@@ -75,8 +126,8 @@ void inserir_no(BTree *arvore, int value) {
             if (i >= no_inserir->num_chaves) break; 
         }
         printf("DEBUG: inserindo %d em chaves[%d]\n", value, i);
-        no_inserir->chaves[i] = value;
-        no_inserir->num_chaves++;
+        insertOrdered(no_inserir->chaves, &no_inserir->num_chaves, value);
+        printArray(no_inserir->chaves, no_inserir->num_chaves);
     }
     return;
     
@@ -89,9 +140,10 @@ int main(){
 
     // Inserir manualmente algumas chaves na folha
     inserir_no(arvore, 5);
-    inserir_no(arvore, 10);
-    inserir_no(arvore, 15);
     inserir_no(arvore, 20);
+    inserir_no(arvore, 15);
+    inserir_no(arvore, 10);
+    inserir_no(arvore, 16);
 
     printf("\nFIM\n");
 
