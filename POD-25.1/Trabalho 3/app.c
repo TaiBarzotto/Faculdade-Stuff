@@ -56,53 +56,74 @@ Node *buscar_no(Node *no, int value) {
     }
 }
 
-void printArray(int *array, int size) {
-    printf("\nDEBUG - PRINT CHAVES\n");
-  for (int i = 0; i < size; i++) {
-    printf("%d ", array[i]);
+void printArray(Node no) {
+    printf("\nDEBUG - PRINT CHAVES\n-");
+
+  for (int i = 0; i < no.num_chaves; i++) {
+    printf(" %d -", no.chaves[i]);
+  }
+
+  for (int i = 0; i < no.num_chaves; i++) {
+    printf(" %d -", no.ponteiros[i]);
   }
   printf("\n");
 }
 
-void insertOrdered(int *array, int *size, int key) {
-    int i = *size - 1;
-
-    while (i >= 0 && array[i] > key) {
-        array[i + 1] = array[i];
+void insertOrdered(Node *no, int key) {
+    int i = no->num_chaves - 1;
+    
+    while (i >= 0 && no->chaves[i] > key) {
+        no->chaves[i + 1] = no->chaves[i];
         i--;
     }
-    array[i + 1] = key;
-
-    (*size)++;
+    no->chaves[i + 1] = key;
+    
+    no->num_chaves++;
 }
 
-void dividir_vetor(int *metade1, int *metade2, int new_key){
+void dividir_vetor(Node *metade1, Node *metade2, int new_key){
     int j = 0;
     int k = 0;
-    for (k = 0; k < NUMERO_PONT_ARV; k++)
+    while (metade1->chaves[k]<new_key)
     {
-        if (metade1[k]<new_key) break;
+        k++;
     }
     
     for (int i = NUMERO_PONT_ARV/2; i < NUMERO_PONT_ARV - 1; i++)
     {
-        printf("DEBUG - Metade1[%d] = %d\n", i, metade1[i]);
-        metade2[j++]=metade1[i];
-        metade1[i]=0;
+        printf("DEBUG - Metade1[%d] = %d\n", i, metade1->chaves[i]);
+        metade2->chaves[j++]=metade1->chaves[i];
+        metade2->num_chaves++;
+        metade1->chaves[i]=0;
+        metade1->num_chaves--;
     }
 
-    if (k>NUMERO_PONT_ARV/2)
+    int tamanho = 0;
+    if (NUMERO_PONT_ARV%2==0){
+        tamanho = NUMERO_PONT_ARV/2;
+    } else{ 
+        tamanho = NUMERO_PONT_ARV/2+1;
+    }
+
+    if (k>=NUMERO_PONT_ARV/2)
     {
-        int tamanho = 0;
-        if (NUMERO_PONT_ARV%2==0){
-            tamanho = NUMERO_PONT_ARV/2;
-        } else{ 
-            tamanho = NUMERO_PONT_ARV/2+1;
-        }
-        insertOrdered(metade2, &tamanho, new_key);
+        insertOrdered(metade2, new_key);
+    }
+    else
+    {
+        insertOrdered(metade1, new_key);
     }
     
-    
+   
+}
+
+void promover(BTree *arvore, Node *metade1, Node *metade2){ // a chave vai ser SEMPRE o 1 valor do vetor chaves da metade 2
+    Node *papis = criar_no(0);
+    insertOrdered(papis, metade2->chaves[0]);
+    // Melhorar essa função de promoção, mas a logica é essa vou promover e onde a chave for inserida, eu vou mudar os ponteiros
+    // o da direita do valor inserido é a metade 2 e o da esquerda é a metade 1
+    papis->ponteiros[0] = metade1;
+    papis->ponteiros[1] = metade2;
 }
 
 void inserir_no(BTree *arvore, int value) {
@@ -116,18 +137,17 @@ void inserir_no(BTree *arvore, int value) {
     Node *no_inserir = buscar_no(arvore->raiz, value);
     if (no_inserir != NULL) {
         if (no_inserir->num_chaves >= NUMERO_PONT_ARV-1){
-            int values[NUMERO_PONT_ARV];
-            dividir_vetor(no_inserir->chaves, values, value);
+            Node *new_no = criar_no(1); 
+            dividir_vetor(no_inserir, new_no, value);
+            no_inserir->next = new_no;
+            printf("No 1:\n");
+            printArray(*no_inserir);
+            printf("No 2:\n");
+            printArray(*new_no);
             return;
         }
-        int i = 0;
-        while (value > no_inserir->chaves[i]) {
-            i++;
-            if (i >= no_inserir->num_chaves) break; 
-        }
-        printf("DEBUG: inserindo %d em chaves[%d]\n", value, i);
-        insertOrdered(no_inserir->chaves, &no_inserir->num_chaves, value);
-        printArray(no_inserir->chaves, no_inserir->num_chaves);
+        insertOrdered(no_inserir, value);
+        printArray(*no_inserir);
     }
     return;
     
