@@ -96,10 +96,13 @@ Node *dividir_no_folha(Node *no_cheio, int new_key) {
         }
     }
     
+    // Calcular ponto de divisão
     int mid = NUMERO_PONT_ARV / 2;
     
+    // Criar novo nó
     Node *novo_no = criar_no(1);
     
+    // Distribuir chaves
     no_cheio->num_chaves = mid;
     novo_no->num_chaves = temp_size - mid;
     
@@ -127,8 +130,8 @@ Node *dividir_no_folha(Node *no_cheio, int new_key) {
     return novo_no;
 }
 
-// Função para dividir um nó interno
-Node *dividir_no_interno(Node *no_cheio, int new_key, Node *novo_filho) {
+// Função para dividir um nó interno - retorna a chave promovida
+int dividir_no_interno(Node *no_cheio, int new_key, Node *novo_filho, Node **novo_no_criado) {
     // Arrays temporários para chaves e ponteiros
     int temp_chaves[NUMERO_PONT_ARV];
     Node *temp_ponteiros[NUMERO_PONT_ARV + 1];
@@ -159,6 +162,10 @@ Node *dividir_no_interno(Node *no_cheio, int new_key, Node *novo_filho) {
     
     // Criar novo nó interno
     Node *novo_no = criar_no(0);
+    *novo_no_criado = novo_no;
+    
+    // A chave do meio será promovida
+    int chave_promovida = temp_chaves[mid];
     
     // Distribuir chaves e ponteiros
     no_cheio->num_chaves = mid;
@@ -171,7 +178,7 @@ Node *dividir_no_interno(Node *no_cheio, int new_key, Node *novo_filho) {
     }
     no_cheio->ponteiros[mid] = temp_ponteiros[mid];
     
-    // Segunda metade vai para o novo nó
+    // Segunda metade vai para o novo nó (excluindo a chave promovida)
     for (int i = 0; i < novo_no->num_chaves; i++) {
         novo_no->chaves[i] = temp_chaves[mid + 1 + i];
         novo_no->ponteiros[i] = temp_ponteiros[mid + 1 + i];
@@ -185,10 +192,7 @@ Node *dividir_no_interno(Node *no_cheio, int new_key, Node *novo_filho) {
         }
     }
     
-    // A chave do meio será promovida
-    int chave_promovida = temp_chaves[mid];
-    
-    return novo_no;
+    return chave_promovida;
 }
 
 void promover(BTree *arvore, Node *esquerda, Node *direita, int chave_promovida) {
@@ -223,12 +227,12 @@ void promover(BTree *arvore, Node *esquerda, Node *direita, int chave_promovida)
         direita->parent = pai;
     } else {
         // Pai também está cheio, precisa dividir
-        Node *novo_pai = dividir_no_interno(pai, chave_promovida, direita);
+        Node *novo_pai;
+        int chave_promovida_pai = dividir_no_interno(pai, chave_promovida, direita, &novo_pai);
         direita->parent = novo_pai;
-        
-        // Promover recursivamente
-        int chave_meio = pai->chaves[NUMERO_PONT_ARV / 2];
-        promover(arvore, pai, novo_pai, chave_meio);
+                
+        // Promover recursivamente a chave que subiu da divisão do pai
+        promover(arvore, pai, novo_pai, chave_promovida_pai);
     }
 }
 
@@ -245,7 +249,6 @@ void inserir_no(BTree *arvore, int value) {
     // Verificar se a chave já existe
     for (int i = 0; i < no_inserir->num_chaves; i++) {
         if (no_inserir->chaves[i] == value) {
-            printf("Chave %d já existe na árvore\n", value);
             return;
         }
     }
@@ -257,17 +260,9 @@ void inserir_no(BTree *arvore, int value) {
         // Promover a primeira chave do novo nó
         int chave_promovida = novo_no->chaves[0];
         promover(arvore, no_inserir, novo_no, chave_promovida);
-        
-        printf("Divisão realizada. Chave promovida: %d\n", chave_promovida);
-        printf("Nó esquerdo: ");
-        printArray(*no_inserir);
-        printf("Nó direito: ");
-        printArray(*novo_no);
     } else {
         // Nó tem espaço, inserir normalmente
         insertOrdered(no_inserir, value);
-        printf("Inserido %d: ", value);
-        printArray(*no_inserir);
     }
 }
 
@@ -312,22 +307,15 @@ void liberar_arvore(Node *no) {
 
 int main(){
     BTree *arvore = criar_arvore();
-    
-    // Inserir manualmente algumas chaves na folha
-    inserir_no(arvore, 5);
-    inserir_no(arvore, 15);
-    inserir_no(arvore, 18);
-    inserir_no(arvore, 20);
-    inserir_no(arvore, 25);
-    inserir_no(arvore, 30);
-    inserir_no(arvore, 35);
-    inserir_no(arvore, 40);
-    inserir_no(arvore, 50);
-    inserir_no(arvore, 70);
+    int value;
+    FILE *entrada = fopen("dados.txt", "r");
+    while (fscanf(entrada, "%d;", &value) != EOF)
+    {
+        inserir_no(arvore, value);
+    }
 
-    printf("\n=== ESTRUTURA FINAL DA ARVORE ===\n");
+    printf("=== ESTRUTURA FINAL DA ARVORE ===\n");
     imprimir_arvore(arvore->raiz, 0);
-    printf("\nFIM\n");
 
     // Libera a memória alocada adequadamente
     liberar_arvore(arvore->raiz);
