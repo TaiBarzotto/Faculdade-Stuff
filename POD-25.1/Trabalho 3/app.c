@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
-#define NUMERO_PONT_ARV 4
+#define DEGREE 4
 
 typedef struct node {
     int is_leaf; // 1 se for folha, 0 se for nó
@@ -8,8 +8,8 @@ typedef struct node {
     int num_ponteiro; // número de ponteiros no nó
 
     // chaves e ponteiros são arrays de tamanho num_ponteiros-1 e num_ponteiros, respectivamente
-    int chaves[NUMERO_PONT_ARV-1];
-    struct node *ponteiros[NUMERO_PONT_ARV];
+    int chaves[DEGREE-1];
+    struct node *ponteiros[DEGREE];
     struct node *next; // próximo nó (usado para folhas)
     struct node *anterior; // próximo nó (usado para folhas)
     struct node *parent; // nó pai (usado para nós)
@@ -35,8 +35,8 @@ Node *criar_no(int is_leaf) {
     no->anterior = NULL;
     no->parent = NULL;
 
-    for (int i = 0; i < NUMERO_PONT_ARV - 1; i++) no->chaves[i] = 0;
-    for (int i = 0; i < NUMERO_PONT_ARV; i++) no->ponteiros[i] = NULL;
+    for (int i = 0; i < DEGREE - 1; i++) no->chaves[i] = 0;
+    for (int i = 0; i < DEGREE; i++) no->ponteiros[i] = NULL;
     return no;
 }
 
@@ -80,29 +80,29 @@ void insertOrdered(Node *no, int key) {
 // Função para dividir um nó folha
 Node *dividir_no_folha(Node *no_cheio, int new_key) {
     // Criar array temporário com todas as chaves (incluindo a nova)
-    int temp_chaves[NUMERO_PONT_ARV];
+    int temp_chaves[DEGREE];
     int temp_size = 0;
     
     // Inserir as chaves existentes e a nova chave em ordem
     int i = 0, j = 0;
-    int key_inserted = 0;
+    int flag_key_inserted = 0;
     
-    while (i < no_cheio->num_chaves || !key_inserted) {
-        if (!key_inserted && (i >= no_cheio->num_chaves || new_key < no_cheio->chaves[i])) {
+    while (i < no_cheio->num_chaves || flag_key_inserted == 0) {
+        if (flag_key_inserted == 0 && (i >= no_cheio->num_chaves || new_key < no_cheio->chaves[i])) {
             temp_chaves[temp_size++] = new_key;
-            key_inserted = 1;
+            flag_key_inserted = 1;
         } else {
             temp_chaves[temp_size++] = no_cheio->chaves[i++];
         }
     }
     
     // Calcular ponto de divisão
-    int mid = NUMERO_PONT_ARV / 2;
+    int mid = DEGREE / 2;
     
     // Criar novo nó
     Node *novo_no = criar_no(1);
     
-    // Distribuir chaves
+    // Dividir chaves
     no_cheio->num_chaves = mid;
     novo_no->num_chaves = temp_size - mid;
     
@@ -110,13 +110,14 @@ Node *dividir_no_folha(Node *no_cheio, int new_key) {
     for (int k = 0; k < mid; k++) {
         no_cheio->chaves[k] = temp_chaves[k];
     }
-    
-    // Copiar segunda metade para o novo nó
+
+    // Copiar segunda metade para o novo nó e zerar o resto do no original
     for (int k = 0; k < novo_no->num_chaves; k++) {
         novo_no->chaves[k] = temp_chaves[mid + k];
+        no_cheio->chaves[mid+k] = 0;
     }
     
-    // Ajustar ponteiros de lista ligada
+    // Ajustar ponteiros de lista encadeada (Duplamente)
     novo_no->next = no_cheio->next;
     if (no_cheio->next) {
         no_cheio->next->anterior = novo_no;
@@ -133,8 +134,8 @@ Node *dividir_no_folha(Node *no_cheio, int new_key) {
 // Função para dividir um nó interno - retorna a chave promovida
 int dividir_no_interno(Node *no_cheio, int new_key, Node *novo_filho, Node **novo_no_criado) {
     // Arrays temporários para chaves e ponteiros
-    int temp_chaves[NUMERO_PONT_ARV];
-    Node *temp_ponteiros[NUMERO_PONT_ARV + 1];
+    int temp_chaves[DEGREE];
+    Node *temp_ponteiros[DEGREE + 1];
     
     // Encontrar posição para inserir nova chave
     int pos = 0;
@@ -143,22 +144,23 @@ int dividir_no_interno(Node *no_cheio, int new_key, Node *novo_filho, Node **nov
     }
     
     // Copiar chaves e ponteiros para arrays temporários
-    for (int i = 0; i < pos; i++) {
+    for (int i = 0; i < pos; i++) { // Copiar os anteriores da posição que vai ser inserido
         temp_chaves[i] = no_cheio->chaves[i];
         temp_ponteiros[i] = no_cheio->ponteiros[i];
     }
     
+    // Colocar a nova chave com os respectivos ponteiros nos arrays temmporários
     temp_chaves[pos] = new_key;
     temp_ponteiros[pos] = no_cheio->ponteiros[pos];
     temp_ponteiros[pos + 1] = novo_filho;
     
-    for (int i = pos; i < no_cheio->num_chaves; i++) {
+    for (int i = pos; i < no_cheio->num_chaves; i++) { // Copiar os valores depois da posição que foi inserido
         temp_chaves[i + 1] = no_cheio->chaves[i];
         temp_ponteiros[i + 2] = no_cheio->ponteiros[i + 1];
     }
     
     // Calcular ponto de divisão
-    int mid = NUMERO_PONT_ARV / 2;
+    int mid = DEGREE / 2;
     
     // Criar novo nó interno
     Node *novo_no = criar_no(0);
@@ -169,7 +171,7 @@ int dividir_no_interno(Node *no_cheio, int new_key, Node *novo_filho, Node **nov
     
     // Distribuir chaves e ponteiros
     no_cheio->num_chaves = mid;
-    novo_no->num_chaves = NUMERO_PONT_ARV - mid - 1;
+    novo_no->num_chaves = DEGREE - mid - 1;
     
     // Primeira metade fica no nó original
     for (int i = 0; i < mid; i++) {
@@ -183,7 +185,7 @@ int dividir_no_interno(Node *no_cheio, int new_key, Node *novo_filho, Node **nov
         novo_no->chaves[i] = temp_chaves[mid + 1 + i];
         novo_no->ponteiros[i] = temp_ponteiros[mid + 1 + i];
     }
-    novo_no->ponteiros[novo_no->num_chaves] = temp_ponteiros[NUMERO_PONT_ARV];
+    novo_no->ponteiros[novo_no->num_chaves] = temp_ponteiros[DEGREE];
     
     // Atualizar pais dos filhos do novo nó
     for (int i = 0; i <= novo_no->num_chaves; i++) {
@@ -212,15 +214,16 @@ void promover(BTree *arvore, Node *esquerda, Node *direita, int chave_promovida)
     }
     
     // Verificar se o pai tem espaço
-    if (pai->num_chaves < NUMERO_PONT_ARV - 1) {
+    if (pai->num_chaves < DEGREE - 1) {
         // Inserir chave no pai
+        // Desloca chaves maiores "para o lado"
         int i = pai->num_chaves - 1;
         while (i >= 0 && pai->chaves[i] > chave_promovida) {
             pai->chaves[i + 1] = pai->chaves[i];
             pai->ponteiros[i + 2] = pai->ponteiros[i + 1];
             i--;
         }
-        
+        // Insere a nova chave na posição adequada
         pai->chaves[i + 1] = chave_promovida;
         pai->ponteiros[i + 2] = direita;
         pai->num_chaves++;
@@ -253,15 +256,14 @@ void inserir_no(BTree *arvore, int value) {
         }
     }
 
-    if (no_inserir->num_chaves >= NUMERO_PONT_ARV - 1) {
+    if (no_inserir->num_chaves >= DEGREE - 1) {
         // Nó está cheio, precisa dividir
         Node *novo_no = dividir_no_folha(no_inserir, value);
         
         // Promover a primeira chave do novo nó
-        int chave_promovida = novo_no->chaves[0];
-        promover(arvore, no_inserir, novo_no, chave_promovida);
+        promover(arvore, no_inserir, novo_no, novo_no->chaves[0]);
     } else {
-        // Nó tem espaço, inserir normalmente
+        // Tem espaço no nó (Folha), somente inserir a chave
         insertOrdered(no_inserir, value);
     }
 }
@@ -272,7 +274,7 @@ void imprimir_arvore(Node *no, int nivel) {
     int i;
 
     if (no->is_leaf) {
-        // Indentação: folhas ficam um nível abaixo
+        // Imprimir a folha
         printf("|");
         for (int j = 0; j < nivel; j++) printf("-");
         for (i = 0; i < no->num_chaves; i++) {
@@ -283,12 +285,12 @@ void imprimir_arvore(Node *no, int nivel) {
         for (i = 0; i < no->num_chaves; i++) {
             imprimir_arvore(no->ponteiros[i], nivel + 1);
             
-            // Nó interno: chave de separação
+            // Imprimir nó interno
             printf("|");
             for (int j = 0; j < nivel; j++) printf("-");
             printf("%d\n", no->chaves[i]);
         }
-        // Último ponteiro
+        // Imprimir ultimo ponteiro
         imprimir_arvore(no->ponteiros[i], nivel + 1);
     }
 }
@@ -314,7 +316,6 @@ int main(){
         inserir_no(arvore, value);
     }
 
-    printf("=== ESTRUTURA FINAL DA ARVORE ===\n");
     imprimir_arvore(arvore->raiz, 0);
 
     // Libera a memória alocada adequadamente
