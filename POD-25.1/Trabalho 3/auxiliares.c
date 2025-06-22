@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "auxiliares.h"
+
 // Cria uma arvore B vazia
 BTree *criar_arvore() {
     BTree *arvore = malloc(sizeof(BTree));
@@ -8,6 +9,7 @@ BTree *criar_arvore() {
     return arvore;
 }
 
+// Cria um nó com o tipo de nó (folha ou interno)
 Node *criar_no(int is_leaf) {
     Node *no = malloc(sizeof(Node));
     no->is_leaf = is_leaf;
@@ -38,15 +40,7 @@ Node *buscar_no(Node *no, int value) {
     }
 }
 
-void printArray(Node no) {
-    printf("\nDEBUG - PRINT CHAVES\n-");
-
-    for (int i = 0; i < no.num_chaves; i++) {
-        printf(" %d -", no.chaves[i]);
-    }
-    printf("\n");
-}
-
+// Função auxiliar para inserir uma chave na sua posição correta em um nó
 void insertOrdered(Node *no, int key) {
     int i = no->num_chaves - 1;
     
@@ -281,7 +275,7 @@ void imprimir_arvore(Node *no, int nivel) {
 void liberar_arvore(Node *no) {
     if (no == NULL) return;
     
-    if (!no->is_leaf) {
+    if (no->is_leaf == 0) {
         for (int i = 0; i <= no->num_chaves; i++) {
             liberar_arvore(no->ponteiros[i]);
         }

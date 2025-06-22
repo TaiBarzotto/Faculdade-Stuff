@@ -22,7 +22,6 @@ typedef struct BTree {
 BTree *criar_arvore();
 Node *criar_no(int is_leaf);
 Node *buscar_no(Node *no, int value);
-void printArray(Node no);
 void insertOrdered(Node *no, int key);
 Node *dividir_no_folha(Node *no_cheio, int new_key);
 int dividir_no_interno(Node *no_cheio, int new_key, Node *novo_filho, Node **novo_no_criado);
