@@ -2,17 +2,17 @@ const model = require("../models");
 
 // Função para obter todos os professores
 const obterTodosProfessores = async () => {
-    return await model.professor.findAll();
+    return await model.Professor.findAll();
 };
 
 // Função para obter professor por ID
 const obterProfessorPorId = async (professor) => {
-    return await model.professor.findByPk(professor.id);
+    return await model.Professor.findByPk(professor.id);
 };
 
 // Função para criar um novo professor
 const criarProfessor = async (professor) => {
-    await model.professor.create(professor);
+    await model.Professor.create(professor);
     return professor;
 };
 
@@ -20,10 +20,10 @@ const criarProfessor = async (professor) => {
 const atualizarProfessor = async (professor) => {
     try {
         // Atualizar o professor
-        await model.professor.update(professor, { where: { id: professor.id } });
+        await model.Professor.update(professor, { where: { id: professor.id } });
 
         // Retornar o professor atualizado
-        return await model.professor.findByPk(professor.id);
+        return await model.Professor.findByPk(professor.id);
     } catch (error) {
         throw error;
     }
@@ -33,7 +33,7 @@ const atualizarProfessor = async (professor) => {
 const deletarProfessor = async (professor) => {
     try {
         // Deletar o professor
-        await model.professor.destroy({ where: { id: professor.id } });
+        await model.Professor.destroy({ where: { id: professor.id } });
         return professor;
     } catch (error) {
         throw error;
