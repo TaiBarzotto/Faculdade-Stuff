@@ -3,6 +3,11 @@ import os
 ESTADO_INICIAL = 0
 PROX_ESTADO_LIVRE = 0
 
+def imprimir_afnd(simbolos, afnd):
+    print("\t" + "\t".join(simbolos))
+    for r, row in enumerate(afnd):
+        print(f"{r}\t" + "\t".join(cell if cell else "-" for cell in row))
+
 def processar_palavra(line, dict_simbolos, afnd):
     global PROX_ESTADO_LIVRE
     eh_simbolo_inicial = 1
@@ -26,6 +31,7 @@ def processar_palavra(line, dict_simbolos, afnd):
                 
 
 def main():
+    global PROX_ESTADO_LIVRE
     if not os.path.exists("tokens.txt"):
         print("Erro ao abrir arquivo de tokens")
         return
@@ -44,7 +50,9 @@ def main():
     count_simbolos = count_simbolos + len(uppercase_letters) -1 if count_simbolos !=0 else count_simbolos + len(uppercase_letters)
     dict_estados = {u: -1 for u in uppercase_letters}
     dict_estados["S"] = 0
+    estados_finais = []
 
+    print(f"Simbolos: {simbolos}")
     afnd = [["" for _ in range(len(simbolos))] for _ in range(count_simbolos)]
 
     with open("tokens.txt", "r") as tokens:
@@ -59,20 +67,32 @@ def main():
                     if any(c.isupper() for c in p):
                         if dict_estados[p[1]] == -1:
                             dict_estados[p[1]] = PROX_ESTADO_LIVRE + 1
+                            PROX_ESTADO_LIVRE = PROX_ESTADO_LIVRE+1
                         if afnd[dict_estados[nome_regra]][dict_simbolos[p[0]]] == "":
                             afnd[dict_estados[nome_regra]][dict_simbolos[p[0]]] = str(dict_estados[p[1]])
                         else:
                             afnd[dict_estados[nome_regra]][dict_simbolos[p[0]]] = ", ",str(dict_estados[p[1]])
-                    if "-" in p:
-                        print("EPSILON")
+                    # Epsilon produção
+                    elif "ε" in p:
+                        for i, s in enumerate(afnd[dict_estados[nome_regra]]):
+                            estados_finais.append(dict_estados[nome_regra])
+                            if s == "":
+                                afnd[dict_estados[nome_regra]][i] = "ε"
+                    # Somente um terminal
+                    else:
+                        afnd[dict_estados[nome_regra]][dict_simbolos[p[0]]] = PROX_ESTADO_LIVRE
+                        estados_finais.append(PROX_ESTADO_LIVRE)
+                        PROX_ESTADO_LIVRE = PROX_ESTADO_LIVRE+1
 
+
+                                
 
                     
             else:
                 processar_palavra(line, dict_simbolos, afnd)
 
     print(dict_estados)
-
+    imprimir_afnd(simbolos, afnd)
     print("\t" + "\t".join(simbolos))
     for r, row in enumerate(afnd):
         print(f"{r}\t" + "\t".join(cell if cell else "-" for cell in row))
