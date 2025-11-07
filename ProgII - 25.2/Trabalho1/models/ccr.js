@@ -25,7 +25,7 @@ module.exports = (sequelize, DataTypes) => {
 	);
 
 	Ccr.associate = function (models) {
-		Ccr.belongTo(models.Curso, {
+		Ccr.belongsTo(models.Curso, {
 			foreignKey: "id_curso",
 			sourceKey: "id",
 		});

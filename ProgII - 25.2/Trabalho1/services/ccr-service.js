@@ -96,10 +96,22 @@ const retornaCcrPorId = async (req, res) => {
     }
 };
 
+// Função para retornar todas as ccrs do curso
+const retornaTodasCcrsCurso = async (req, res) => {
+    try {
+        const ccrs = await ccrRepository.obterCcrPorIdCurso(req.params.id_curso);
+        res.status(200).json({ ccrs: ccrs });
+    } catch (error) {
+        console.log("Erro ao buscar ccrs:", error);
+        res.sendStatus(500);
+    }
+};
+
 module.exports = {
     retornaTodosCcrs,
     criaCcr,
     atualizaCcr,
     deletaCcr,
     retornaCcrPorId,
+    retornaTodasCcrsCurso,
 };

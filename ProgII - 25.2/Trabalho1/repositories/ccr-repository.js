@@ -40,10 +40,20 @@ const deletarCcr = async (ccr) => {
     }
 };
 
+// Função para obter matricula por ID do curso
+const obterCcrPorIdCurso = async (id_curso) => {
+    return await model.Ccr.findAll({
+        where: {
+            id_curso: id_curso,
+        }
+    });
+};
+
 module.exports = {
     obterTodosCcrs,
     obterCcrPorId,
     criarCcr,
     atualizarCcr,
     deletarCcr,
+    obterCcrPorIdCurso,
 };

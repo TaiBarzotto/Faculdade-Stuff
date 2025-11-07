@@ -12,6 +12,9 @@ ccrRouter.get("/todos", ccrService.retornaTodosCcrs);
 // GET /ccr/:id - Retornar ccr por ID
 ccrRouter.get("/:id", ccrService.retornaCcrPorId);
 
+// GET /ccr/:id_curso - Retornar todas as ccrs do curso
+ccrRouter.get("/curso/:id_curso", ccrService.retornaTodasCcrsCurso);
+
 // PUT /ccr/:id - Atualizar ccr
 ccrRouter.put("/:id", ccrService.atualizaCcr);
 

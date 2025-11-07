@@ -10,7 +10,7 @@ Sequelize.useCLS(transactionNamespace);
 const sequelize = new Sequelize({
 	host: "localhost",
 	port: "5432",
-	database: "progII-not",
+	database: "progii",
 	username: "postgres",
 	password: "12345",
 	schema: "public",
