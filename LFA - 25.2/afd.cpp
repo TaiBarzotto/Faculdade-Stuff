@@ -84,11 +84,7 @@ int main(){
                 cout << afnd[r][col] << "\t";
         }
         cout << '\n';
-    }
-
-
-    
-    
+    }    
 
     fclose(tokens);
     return 0;
