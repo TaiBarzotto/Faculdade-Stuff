@@ -8,9 +8,9 @@ def imprimir_afnd(simbolos, afnd):
     for r, row in enumerate(afnd):
         print(f"{r}\t" + "\t".join(cell if cell else "-" for cell in row))
 
-def processar_palavra(line, dict_simbolos, afnd):
+def processar_palavra(line, dict_simbolos, afnd, estados_finais, tokens_estados):
     global PROX_ESTADO_LIVRE
-    eh_simbolo_inicial = 1
+    eh_simbolo_inicial = True
     for char in line:
                 if char != ' ' and char !="\n":
                     if eh_simbolo_inicial:
@@ -28,7 +28,19 @@ def processar_palavra(line, dict_simbolos, afnd):
                         PROX_ESTADO_LIVRE += 1
 
                     eh_simbolo_inicial = False
-                
+                elif char == '\n':
+                    estados_finais.add(PROX_ESTADO_LIVRE)
+                    # nova_linha = [''] * len(dict_simbolos) 
+                    # afnd.append(nova_linha)  
+                    nova_linha_estado_final = ['ε2'] * len(dict_simbolos) 
+                    afnd[PROX_ESTADO_LIVRE] = nova_linha_estado_final
+                    tokens_estados[PROX_ESTADO_LIVRE] = line.replace("\n","")
+
+    if not line.endswith('\n'):
+        tokens_estados[PROX_ESTADO_LIVRE] = line
+        estados_finais.add(PROX_ESTADO_LIVRE)
+        nova_linha_estado_final = ['ε2'] * len(dict_simbolos) 
+        afnd.append(nova_linha_estado_final)
 
 def main():
     global PROX_ESTADO_LIVRE
@@ -40,7 +52,7 @@ def main():
         simbolos = set()
         for line in tokens:
             for char in line.strip():
-                if char != ' ' and char not in {':', '<', '>', '=', '|'} and not char.isupper():
+                if char != ' ' and char not in {':', '<', '>', '=', '|', '*', '\n'} and not char.isupper():
                     simbolos.add(char)
 
     dict_simbolos = {s: i for i, s in enumerate(simbolos)}
@@ -50,7 +62,8 @@ def main():
     count_simbolos = count_simbolos + len(uppercase_letters) -1 if count_simbolos !=0 else count_simbolos + len(uppercase_letters)
     dict_estados = {u: -1 for u in uppercase_letters}
     dict_estados["S"] = 0
-    estados_finais = []
+    estados_finais = set()
+    tokens_estado = {}
 
     print(f"Simbolos: {simbolos}")
     afnd = [["" for _ in range(len(simbolos))] for _ in range(count_simbolos)]
@@ -71,31 +84,38 @@ def main():
                         if afnd[dict_estados[nome_regra]][dict_simbolos[p[0]]] == "":
                             afnd[dict_estados[nome_regra]][dict_simbolos[p[0]]] = str(dict_estados[p[1]])
                         else:
-                            afnd[dict_estados[nome_regra]][dict_simbolos[p[0]]] = ", ",str(dict_estados[p[1]])
+                            afnd[dict_estados[nome_regra]][dict_simbolos[p[0]]] += ", "+str(dict_estados[p[1]])
                     # Epsilon produção
-                    elif "ε" in p:
+                    elif "*" in p:
                         for i, s in enumerate(afnd[dict_estados[nome_regra]]):
-                            estados_finais.append(dict_estados[nome_regra])
+                            estados_finais.add(dict_estados[nome_regra])
                             if s == "":
-                                afnd[dict_estados[nome_regra]][i] = "ε"
+                                afnd[dict_estados[nome_regra]][i] = "ε1"
                     # Somente um terminal
                     else:
-                        afnd[dict_estados[nome_regra]][dict_simbolos[p[0]]] = PROX_ESTADO_LIVRE
-                        estados_finais.append(PROX_ESTADO_LIVRE)
-                        PROX_ESTADO_LIVRE = PROX_ESTADO_LIVRE+1
+                        PROX_ESTADO_LIVRE = PROX_ESTADO_LIVRE + 1
+                        if afnd[dict_estados[nome_regra]][dict_simbolos[p[0]]] == "":
+                            afnd[dict_estados[nome_regra]][dict_simbolos[p[0]]] = str(PROX_ESTADO_LIVRE)
+                        else:
+                            afnd[dict_estados[nome_regra]][dict_simbolos[p[0]]] += ", "+ str(PROX_ESTADO_LIVRE)
+                        estados_finais.add(PROX_ESTADO_LIVRE)
+                        nova_linha_estado_final = ['ε2'] * len(dict_simbolos) 
+                        nova_linha = [''] * len(dict_simbolos) 
+                        afnd.append(nova_linha)  
+                        afnd[PROX_ESTADO_LIVRE] = nova_linha_estado_final
 
 
                                 
 
                     
             else:
-                processar_palavra(line, dict_simbolos, afnd)
+                processar_palavra(line, dict_simbolos, afnd, estados_finais, tokens_estado)
 
     print(dict_estados)
+    print(estados_finais)
     imprimir_afnd(simbolos, afnd)
-    print("\t" + "\t".join(simbolos))
-    for r, row in enumerate(afnd):
-        print(f"{r}\t" + "\t".join(cell if cell else "-" for cell in row))
+    print(tokens_estado)
+    
 
 if __name__ == "__main__":
     main()
