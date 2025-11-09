@@ -3,15 +3,17 @@ import os
 ESTADO_INICIAL = 0
 PROX_ESTADO_LIVRE = 0
 
-def imprimir_afnd(simbolos, afnd):
+def imprimir_afnd(simbolos, afnd, finais):
     print("\t\t" + "\t\t".join(simbolos))
+    print("->", end='')
     for r, row in enumerate(afnd):
-        print(f"{r}\t\t" + "\t\t".join(cell if cell else "E" for cell in row))
+        print(f"{f"*{r}" if r in finais else r}\t\t" + "\t\t".join(cell for cell in row))
 
-def imprimir_afd(simbolos, afd:dict):
+def imprimir_afd(simbolos, afd:dict, finais):
     print("\t\t" + "\t\t".join(simbolos))
+    print("->", end='')
     for key, values in afd.items():
-        print(f"{key}\t\t" + "\t\t".join(cell for cell in values))
+        print(f"{f"*{key}" if key in finais else key}\t\t" + "\t\t".join(cell for cell in values))
 
 def processar_palavra(line, dict_simbolos, afnd, estados_finais, tokens_estados):
     global PROX_ESTADO_LIVRE
@@ -51,7 +53,6 @@ def processar_gramatica(line, dict_estados, dict_simbolos, afnd, estados_finais)
     line_no_space = line.replace(" ","").replace("<",'').replace(">",'').strip()
     nome_regra = line_no_space.split("::=")[0]
     producoes = (line_no_space.replace(f"{nome_regra}::=", '')).split("|")
-    print(producoes)
     for p in producoes:
         # Casos do tipo aA
         if any(c.isupper() for c in p):
@@ -127,7 +128,6 @@ def gerar_afnd():
     estados_finais = set()
     tokens_estado = {}
 
-    print(f"Simbolos: {simbolos}")
     afnd = [["" for _ in range(len(simbolos))] for _ in range(count_simbolos)]
 
     with open("tokens.txt","r") as tokens:
@@ -136,34 +136,15 @@ def gerar_afnd():
                 processar_gramatica(line, dict_estados, dict_simbolos, afnd, estados_finais)
             else:
                 processar_palavra(line, dict_simbolos, afnd, estados_finais, tokens_estado)
-
-    print(f"Estados-Inteiro (Vindos das Gramaticas): {dict_estados}")
+    imprimir_afnd(simbolos, afnd, estados_finais)
     print(f"Final dos tokens: {tokens_estado}")
+    print(f"Estados finais da AFND: {estados_finais}")
     
-
     afd = {}
     afd['0'] = [cell for cell in afnd[0]]
     i = 0
     afd_nova(afd, afnd, list(afd.keys()))
 
-    novos_estados_finais = []
-    for estados in afd.keys():
-        if "," in estados:
-            for estado in estados.split(","):
-                if int(estado) in estados_finais:
-                    novos_estados_finais.append(estados)
-                    break
-        else:
-            if int(estados) in estados_finais:
-                novos_estados_finais.append(estados)
-                   
-    for estado_final in novos_estados_finais:
-        if "" in afd[estado_final]:
-            for i, elemento in enumerate(afd[estado_final]):
-                if elemento == '':
-                    afd[estado_final][i] = "-"
-    print(f"Estados finais: {estados_finais}")
-    print(f"Novos estados finais: {novos_estados_finais}")
 
     mapa_final_estados = {str(v): k for k, v in dict_estados.items()}
     ultimo_estado = list(dict_estados.keys())
@@ -176,6 +157,7 @@ def gerar_afnd():
                 proxima_letra += 1
             
             mapa_final_estados[str(num_linha)] = chr(proxima_letra)
+            dict_estados[chr(proxima_letra)] = num_linha
             proxima_letra += 1
 
     for valor in afd.values():
@@ -193,6 +175,7 @@ def gerar_afnd():
                     valor[i]= new_name
                 else:
                     valor[i]= mapa_final_estados[cell]
+
     chaves_antigas = list(afd.keys())
     for chave in chaves_antigas:
         if "," in chave:
@@ -207,11 +190,31 @@ def gerar_afnd():
             afd[new_name] = afd.pop(chave)
         else:
            afd[mapa_final_estados[chave]] = afd.pop(chave)
+
+    novos_estados_finais = []
+    for estados in afd.keys():
+        if "," in estados:
+            for estado in estados.replace("[", '').replace(']','').split(","):
+                if dict_estados[estado] in estados_finais:
+                    novos_estados_finais.append(estados)
+                    break
+        else:
+            if dict_estados[estados] in estados_finais:
+                novos_estados_finais.append(estados)
+                   
+    for estado_final in novos_estados_finais:
+        if "" in afd[estado_final]:
+            for i, elemento in enumerate(afd[estado_final]):
+                if elemento == '':
+                    afd[estado_final][i] = "-"
+
     estado_de_erro = ['~'] * len(simbolos)
     afd['Er'] = estado_de_erro
     for key, values in afd.items():
        for i, cell in enumerate(values):
             values[i] = cell if cell else "Er" 
-    imprimir_afd(simbolos, afd)
+    print(f"Estado->Numero: {dict_estados}")
+    imprimir_afd(simbolos, afd, novos_estados_finais)
+    print(f"Estados Finais: {novos_estados_finais}")
 if __name__ == "__main__":
     gerar_afnd()
