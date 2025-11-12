@@ -1,46 +1,54 @@
 import os
 
+# Constantes globais
 ESTADO_INICIAL = 0
 PROX_ESTADO_LIVRE = 0
 
-def imprimir_afnd(simbolos, afnd, finais):
+# Funções de impressão
+def imprimir_afnd(simbolos: list, afnd: list, finais: list) -> None:
     print("\t\t" + "\t\t".join(simbolos))
     print("->", end='')
+
     for r, row in enumerate(afnd):
-        print(f"{f"*{r}" if r in finais else r}\t\t" + "\t\t".join(cell for cell in row))
+        celula = f"*{r}" if r in finais else str(r)
+        print(f"{celula}\t\t" + "\t\t".join(cell for cell in row))
 
-def imprimir_afd(simbolos, afd:dict, finais):
+
+def imprimir_afd(simbolos: list, afd: dict, finais: list) -> None:
     print("\t\t" + "\t\t".join(simbolos))
     print("->", end='')
-    for key, values in afd.items():
-        print(f"{f"*{key}" if key in finais else key}\t\t" + "\t\t".join(cell for cell in values))
 
+    for key, values in afd.items():
+        celula = f"*{key}" if key in finais else str(key)
+        print(f"{celula}\t\t" + "\t\t".join(cell for cell in values))
+
+# Processar uma palavra e inseri-la na AFND
 def processar_palavra(line, dict_simbolos, afnd, estados_finais, tokens_estados):
     global PROX_ESTADO_LIVRE
     eh_simbolo_inicial = True
+
     for char in line:
-                if char != ' ' and char !="\n":
-                    if eh_simbolo_inicial:
-                        estado_atual = ESTADO_INICIAL
-                    else:
-                        estado_atual = PROX_ESTADO_LIVRE
+        if char != ' ' and char !="\n":
+            if eh_simbolo_inicial:
+                estado_atual = ESTADO_INICIAL
+            else:
+                estado_atual = PROX_ESTADO_LIVRE
 
-                    if char in dict_simbolos:
-                        idx = dict_simbolos[char]
-                        if afnd[estado_atual][idx] == "" or afnd[estado_atual][idx] == "-":
-                            afnd[estado_atual][idx] = str(PROX_ESTADO_LIVRE + 1)
-                        else:
-                            afnd[estado_atual][idx] += "," + str(PROX_ESTADO_LIVRE + 1)
+            if char in dict_simbolos:
+                idx = dict_simbolos[char]
+                if afnd[estado_atual][idx] == "" or afnd[estado_atual][idx] == "-":
+                    afnd[estado_atual][idx] = str(PROX_ESTADO_LIVRE + 1)
+                else:
+                    afnd[estado_atual][idx] += "," + str(PROX_ESTADO_LIVRE + 1)
+                PROX_ESTADO_LIVRE += 1
 
-                        PROX_ESTADO_LIVRE += 1
+            eh_simbolo_inicial = False
 
-                    eh_simbolo_inicial = False
-                elif char == '\n':
-                    estados_finais.add(PROX_ESTADO_LIVRE)
-
-                    nova_linha_estado_final = ['-'] * len(dict_simbolos) 
-                    afnd[PROX_ESTADO_LIVRE] = nova_linha_estado_final
-                    tokens_estados[PROX_ESTADO_LIVRE] = line.replace("\n","")
+        elif char == '\n':
+            estados_finais.add(PROX_ESTADO_LIVRE)
+            nova_linha_estado_final = ['-'] * len(dict_simbolos) 
+            afnd[PROX_ESTADO_LIVRE] = nova_linha_estado_final
+            tokens_estados[PROX_ESTADO_LIVRE] = line.replace("\n","")
 
     if not line.endswith('\n'):
         tokens_estados[PROX_ESTADO_LIVRE] = line
@@ -48,6 +56,7 @@ def processar_palavra(line, dict_simbolos, afnd, estados_finais, tokens_estados)
         nova_linha_estado_final = ['-'] * len(dict_simbolos) 
         afnd.append(nova_linha_estado_final)
 
+# Processar uma regra de uma GR e inseri-la na AFND
 def processar_gramatica(line, dict_estados, dict_simbolos, afnd, estados_finais):
     global PROX_ESTADO_LIVRE
     line_no_space = line.replace(" ","").replace("<",'').replace(">",'').strip()
@@ -82,9 +91,11 @@ def processar_gramatica(line, dict_estados, dict_simbolos, afnd, estados_finais)
             afnd.append(nova_linha)  
             afnd[PROX_ESTADO_LIVRE] = nova_linha_estado_final
 
-def afd_nova(afd,afnd, estados):
+# Determinizar uma AFND transformando-a em uma AFD
+def determinizar_afnd(afd,afnd, estados):
     if estados == []: return
     novos_estados = []
+
     for estado in estados:
             for novo_estado in afd[estado]:
                 if novo_estado != '-' and novo_estado!='':
@@ -103,14 +114,71 @@ def afd_nova(afd,afnd, estados):
                         else:
                             if novo_estado not in afd:
                                 afd[novo_estado] = afnd[int(novo_estado)]
-            afd_nova(afd, afnd,novos_estados)
+            determinizar_afnd(afd, afnd,novos_estados)
 
-def gerar_afnd():
+# Gerar a AFND com base nas palavras e regras do arquivo tokens.txt
+def gerar_afnd(simbolos, count_simbolos, dict_estados, dict_simbolos, estados_finais):
+    tokens_estado = {}
+    afnd = [["" for _ in range(len(simbolos))] for _ in range(count_simbolos)]
+
+    # Processamento de arquivo
+    with open("tokens.txt", "r") as tokens:
+        for line in tokens:
+            if "::" in line:
+                processar_gramatica(line, dict_estados, dict_simbolos, afnd, estados_finais)
+            else:
+                processar_palavra(line, dict_simbolos, afnd, estados_finais, tokens_estado)
+
+    imprimir_afnd(simbolos, afnd, estados_finais)
+    print(f"Final dos tokens: {tokens_estado}")
+    print(f"Estados finais da AFND: {estados_finais}")
+
+    return afnd
+
+# Transformar o nome dos estados de inteiros para letras maiúsculas
+def renomear_estados_letras(dict_estados, afnd, afd:dict):
+    # Mapeamento de estados e renomeação
+    mapa_final_estados = {str(v): k for k, v in dict_estados.items()}
+    ultimos = sorted([k for k in dict_estados if k != 'S'])
+    proxima_letra = ord(ultimos[-1]) if ultimos else ord('A')
+
+    # Usa a AFND pois nela o nome dos estados é somente um único inteiro
+    for num_linha in range(len(afnd)):
+        if str(num_linha) not in mapa_final_estados:
+            while chr(proxima_letra) in dict_estados:
+                proxima_letra += 1
+            novo_nome = chr(proxima_letra)
+            mapa_final_estados[str(num_linha)] = novo_nome
+            dict_estados[novo_nome] = num_linha
+            proxima_letra += 1
+
+    # Substituição de estados por letras na AFD
+    for valor in afd.values():
+        for i, cell in enumerate(valor):
+            if cell not in {'', '-'}:
+                if "," in cell:
+                    nomes = ",".join(mapa_final_estados[e] for e in cell.split(","))
+                    valor[i] = f"[{nomes}]"
+                else:
+                    valor[i] = mapa_final_estados[cell]
+    
+    # Renomear chaves da AFD
+    for chave in list(afd.keys()):
+        if "," in chave:
+            nomes = ",".join(mapa_final_estados[e] for e in chave.split(","))
+            afd[f"[{nomes}]"] = afd.pop(chave)
+        else:
+            afd[mapa_final_estados[chave]] = afd.pop(chave)
+
+
+def main():
     global PROX_ESTADO_LIVRE
+
     if not os.path.exists("tokens.txt"):
         print("Erro ao abrir arquivo de tokens")
         return
-
+    
+    # Coleta de símbolos
     with open("tokens.txt","r") as tokens:
         simbolos = set()
         for line in tokens:
@@ -120,77 +188,27 @@ def gerar_afnd():
     simbolos = sorted(simbolos)
     dict_simbolos = {s: i for i, s in enumerate(simbolos)}
 
+    # Contagem de estados e configuração inicial
     count_simbolos = sum(len(line.strip()) for line in open("tokens.txt") if ("::" not in line))
-    uppercase_letters = {char for line in open("tokens.txt") for char in line.strip() if char.isupper()}
+    uppercase_letters = {
+        char for line in open("tokens.txt") for char in line.strip() if char.isupper()
+    }
+
     count_simbolos = count_simbolos + len(uppercase_letters) -1 if count_simbolos !=0 else count_simbolos + len(uppercase_letters)
     dict_estados = {u: -1 for u in uppercase_letters}
     dict_estados["S"] = 0
+
     estados_finais = set()
-    tokens_estado = {}
-
-    afnd = [["" for _ in range(len(simbolos))] for _ in range(count_simbolos)]
-
-    with open("tokens.txt","r") as tokens:
-        for line in tokens:
-            if("::" in line):
-                processar_gramatica(line, dict_estados, dict_simbolos, afnd, estados_finais)
-            else:
-                processar_palavra(line, dict_simbolos, afnd, estados_finais, tokens_estado)
-    imprimir_afnd(simbolos, afnd, estados_finais)
-    print(f"Final dos tokens: {tokens_estado}")
-    print(f"Estados finais da AFND: {estados_finais}")
     
-    afd = {}
-    afd['0'] = [cell for cell in afnd[0]]
-    i = 0
-    afd_nova(afd, afnd, list(afd.keys()))
+    afnd = gerar_afnd(simbolos, count_simbolos, dict_estados, dict_simbolos, estados_finais)
 
+    # Determinização
+    afd = {'0': [cell for cell in afnd[0]]}
+    determinizar_afnd(afd, afnd, list(afd.keys()))
 
-    mapa_final_estados = {str(v): k for k, v in dict_estados.items()}
-    ultimo_estado = list(dict_estados.keys())
-    ultimo_estado.remove('S')
-    ultimo_estado.sort()
-    proxima_letra = ord(ultimo_estado[-1]) 
-    for num_linha, linha in enumerate(afnd):
-        if str(num_linha) not in mapa_final_estados.keys():
-            while chr(proxima_letra) in dict_estados:
-                proxima_letra += 1
-            
-            mapa_final_estados[str(num_linha)] = chr(proxima_letra)
-            dict_estados[chr(proxima_letra)] = num_linha
-            proxima_letra += 1
+    renomear_estados_letras(dict_estados, afnd, afd)
 
-    for valor in afd.values():
-        for i,cell in enumerate(valor):
-            if cell != '' and cell !='-':
-                if "," in cell:
-                    estados_novos = cell.split(",")
-                    new_name = "["
-                    for e in estados_novos:
-                        if new_name == "[":
-                            new_name += mapa_final_estados[e]
-                            continue
-                        new_name+=","+mapa_final_estados[e]
-                    new_name+=']'
-                    valor[i]= new_name
-                else:
-                    valor[i]= mapa_final_estados[cell]
-
-    chaves_antigas = list(afd.keys())
-    for chave in chaves_antigas:
-        if "," in chave:
-            estados_novos = chave.split(",")
-            new_name = "["
-            for e in estados_novos:
-                if new_name == "[":
-                    new_name += mapa_final_estados[e]
-                    continue
-                new_name+=","+mapa_final_estados[e]
-            new_name+=']'
-            afd[new_name] = afd.pop(chave)
-        else:
-           afd[mapa_final_estados[chave]] = afd.pop(chave)
-
+    # Ajuste de estados finais
     novos_estados_finais = []
     for estados in afd.keys():
         if "," in estados:
@@ -216,5 +234,6 @@ def gerar_afnd():
     print(f"Estado->Numero: {dict_estados}")
     imprimir_afd(simbolos, afd, novos_estados_finais)
     print(f"Estados Finais: {novos_estados_finais}")
+
 if __name__ == "__main__":
-    gerar_afnd()
+    main()
