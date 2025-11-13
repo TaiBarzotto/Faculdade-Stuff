@@ -36,7 +36,7 @@ def processar_palavra(line, dict_simbolos, afnd, estados_finais, tokens_estados)
 
             if char in dict_simbolos:
                 idx = dict_simbolos[char]
-                if afnd[estado_atual][idx] == "" or afnd[estado_atual][idx] == "-":
+                if afnd[estado_atual][idx] == "":
                     afnd[estado_atual][idx] = str(PROX_ESTADO_LIVRE + 1)
                 else:
                     afnd[estado_atual][idx] += "," + str(PROX_ESTADO_LIVRE + 1)
@@ -46,14 +46,14 @@ def processar_palavra(line, dict_simbolos, afnd, estados_finais, tokens_estados)
 
         elif char == '\n':
             estados_finais.add(PROX_ESTADO_LIVRE)
-            nova_linha_estado_final = ['-'] * len(dict_simbolos) 
-            afnd[PROX_ESTADO_LIVRE] = nova_linha_estado_final
+            nova_linha_estado_final = [''] * len(dict_simbolos)
             tokens_estados[PROX_ESTADO_LIVRE] = line.replace("\n","")
+            afnd.append(nova_linha_estado_final)
 
     if not line.endswith('\n'):
         tokens_estados[PROX_ESTADO_LIVRE] = line
         estados_finais.add(PROX_ESTADO_LIVRE)
-        nova_linha_estado_final = ['-'] * len(dict_simbolos) 
+        nova_linha_estado_final = [''] * len(dict_simbolos) 
         afnd.append(nova_linha_estado_final)
 
 # Processar uma regra de uma GR e inseri-la na AFND
@@ -68,7 +68,7 @@ def processar_gramatica(line, dict_estados, dict_simbolos, afnd, estados_finais)
             if dict_estados[p[1]] == -1:
                 dict_estados[p[1]] = PROX_ESTADO_LIVRE + 1
                 PROX_ESTADO_LIVRE = PROX_ESTADO_LIVRE+1
-            if afnd[dict_estados[nome_regra]][dict_simbolos[p[0]]] == "" or afnd[dict_estados[nome_regra]][dict_simbolos[p[0]]] == "-":
+            if afnd[dict_estados[nome_regra]][dict_simbolos[p[0]]] == "":
                 afnd[dict_estados[nome_regra]][dict_simbolos[p[0]]] = str(dict_estados[p[1]])
             else:
                 afnd[dict_estados[nome_regra]][dict_simbolos[p[0]]] += ","+str(dict_estados[p[1]])
@@ -77,16 +77,16 @@ def processar_gramatica(line, dict_estados, dict_simbolos, afnd, estados_finais)
             for i, s in enumerate(afnd[dict_estados[nome_regra]]):
                 estados_finais.add(dict_estados[nome_regra])
                 if s == "":
-                    afnd[dict_estados[nome_regra]][i] = "-"
+                    afnd[dict_estados[nome_regra]][i] = ""
         # Somente um terminal
         else:
             PROX_ESTADO_LIVRE = PROX_ESTADO_LIVRE + 1
-            if afnd[dict_estados[nome_regra]][dict_simbolos[p[0]]] == "" or afnd[dict_estados[nome_regra]][dict_simbolos[p[0]]] == "-":
+            if afnd[dict_estados[nome_regra]][dict_simbolos[p[0]]] == "":
                 afnd[dict_estados[nome_regra]][dict_simbolos[p[0]]] = str(PROX_ESTADO_LIVRE)
             else:
                 afnd[dict_estados[nome_regra]][dict_simbolos[p[0]]] += ","+ str(PROX_ESTADO_LIVRE)
             estados_finais.add(PROX_ESTADO_LIVRE)
-            nova_linha_estado_final = ['-'] * len(dict_simbolos) 
+            nova_linha_estado_final = [''] * len(dict_simbolos) 
             nova_linha = [''] * len(dict_simbolos) 
             afnd.append(nova_linha)  
             afnd[PROX_ESTADO_LIVRE] = nova_linha_estado_final
@@ -98,14 +98,14 @@ def determinizar_afnd(afd,afnd, estados):
 
     for estado in estados:
             for novo_estado in afd[estado]:
-                if novo_estado != '-' and novo_estado!='':
+                if novo_estado!='':
                     if novo_estado not in afd.keys():
                         novos_estados.append(novo_estado)
                         if "," in novo_estado:
                             transicoes = [''] * len(afd[estado]) 
                             for c in novo_estado.split(","):
                                     for i, estado_t in enumerate(afnd[int(c)]):
-                                        if estado_t != '' and estado_t != '-':
+                                        if estado_t != '':
                                             if transicoes[i] == '':
                                                 transicoes[i] = estado_t
                                             else:
@@ -155,7 +155,7 @@ def renomear_estados_letras(dict_estados, afnd, afd:dict):
     # Substituição de estados por letras na AFD
     for valor in afd.values():
         for i, cell in enumerate(valor):
-            if cell not in {'', '-'}:
+            if cell !='':
                 if "," in cell:
                     nomes = ",".join(mapa_final_estados[e] for e in cell.split(","))
                     valor[i] = f"[{nomes}]"
@@ -169,6 +169,8 @@ def renomear_estados_letras(dict_estados, afnd, afd:dict):
             afd[f"[{nomes}]"] = afd.pop(chave)
         else:
             afd[mapa_final_estados[chave]] = afd.pop(chave)
+
+    print(mapa_final_estados)
 
 
 def main():
@@ -189,7 +191,7 @@ def main():
     dict_simbolos = {s: i for i, s in enumerate(simbolos)}
 
     # Contagem de estados e configuração inicial
-    count_simbolos = sum(len(line.strip()) for line in open("tokens.txt") if ("::" not in line))
+    count_simbolos = sum(len(line.replace("\n",'').strip()) for line in open("tokens.txt") if ("::" not in line))
     uppercase_letters = {
         char for line in open("tokens.txt") for char in line.strip() if char.isupper()
     }
@@ -219,19 +221,12 @@ def main():
         else:
             if dict_estados[estados] in estados_finais:
                 novos_estados_finais.append(estados)
-                   
-    for estado_final in novos_estados_finais:
-        if "" in afd[estado_final]:
-            for i, elemento in enumerate(afd[estado_final]):
-                if elemento == '':
-                    afd[estado_final][i] = "-"
 
     estado_de_erro = ['~'] * len(simbolos)
-    afd['Er'] = estado_de_erro
-    for key, values in afd.items():
+    afd['~'] = estado_de_erro
+    for values in afd.values():
        for i, cell in enumerate(values):
-            values[i] = cell if cell else "Er" 
-    print(f"Estado->Numero: {dict_estados}")
+            values[i] = cell if cell else "~" 
     imprimir_afd(simbolos, afd, novos_estados_finais)
     print(f"Estados Finais: {novos_estados_finais}")
 
