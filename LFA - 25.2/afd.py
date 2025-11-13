@@ -6,21 +6,30 @@ PROX_ESTADO_LIVRE = 0
 
 # Funções de impressão
 def imprimir_afnd(simbolos: list, afnd: list, finais: list) -> None:
+    print("\n============================= AFND =============================")
     print("\t\t" + "\t\t".join(simbolos))
     print("->", end='')
 
     for r, row in enumerate(afnd):
         celula = f"*{r}" if r in finais else str(r)
         print(f"{celula}\t\t" + "\t\t".join(cell for cell in row))
+        print("-----------------"*len(simbolos))
 
 
 def imprimir_afd(simbolos: list, afd: dict, finais: list) -> None:
+    print("\n============================= AFD =============================")
     print("\t\t" + "\t\t".join(simbolos))
     print("->", end='')
-
+    celula = f"*S" if 'S' in finais else 'S'
+    print(f"{celula}\t\t" + "\t\t".join(f"[{cell}]" if ',' in cell else cell for cell in afd['S']))
+    print("-----------------"*len(simbolos))
     for key, values in afd.items():
-        celula = f"*{key}" if key in finais else str(key)
-        print(f"{celula}\t\t" + "\t\t".join(cell for cell in values))
+        if key != 'S':
+            chave_composta = f"[{key}]" if ',' in key else key
+            celula = f"*{chave_composta}" if key in finais else chave_composta
+            print(f"{celula}\t\t" + "\t\t".join(f"[{cell}]" if ',' in cell else cell for cell in values))
+            print("-----------------"*len(simbolos))
+        
 
 # Processar uma palavra e inseri-la na AFND
 def processar_palavra(line, dict_simbolos, afnd, estados_finais, tokens_estados):
@@ -158,7 +167,7 @@ def renomear_estados_letras(dict_estados, afnd, afd:dict):
             if cell !='':
                 if "," in cell:
                     nomes = ",".join(mapa_final_estados[e] for e in cell.split(","))
-                    valor[i] = f"[{nomes}]"
+                    valor[i] = f"{nomes}"
                 else:
                     valor[i] = mapa_final_estados[cell]
     
@@ -166,11 +175,9 @@ def renomear_estados_letras(dict_estados, afnd, afd:dict):
     for chave in list(afd.keys()):
         if "," in chave:
             nomes = ",".join(mapa_final_estados[e] for e in chave.split(","))
-            afd[f"[{nomes}]"] = afd.pop(chave)
+            afd[f"{nomes}"] = afd.pop(chave)
         else:
             afd[mapa_final_estados[chave]] = afd.pop(chave)
-
-    print(mapa_final_estados)
 
 
 def main():
@@ -214,7 +221,7 @@ def main():
     novos_estados_finais = []
     for estados in afd.keys():
         if "," in estados:
-            for estado in estados.replace("[", '').replace(']','').split(","):
+            for estado in estados.split(","):
                 if dict_estados[estado] in estados_finais:
                     novos_estados_finais.append(estados)
                     break
@@ -227,8 +234,6 @@ def main():
     for values in afd.values():
        for i, cell in enumerate(values):
             values[i] = cell if cell else "~" 
-    imprimir_afd(simbolos, afd, novos_estados_finais)
-    print(f"Estados Finais: {novos_estados_finais}")
-
+    imprimir_afd(simbolos, dict(sorted(afd.items())), novos_estados_finais)
 if __name__ == "__main__":
     main()
