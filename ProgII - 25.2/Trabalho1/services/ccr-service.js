@@ -13,16 +13,15 @@ const retornaTodosCcrs = async (req, res) => {
 
 // Função para criar um novo ccr
 const criaCcr = async (req, res) => {
-    const { id, descricao, ementa, id_curso } = req.body;
+    const {descricao, ementa, id_curso } = req.body;
     try {
-        if (!id || !descricao || !ementa || !id_curso) {
+        if (!descricao || !ementa || !id_curso) {
             return res
                 .status(400)
-                .json({ message: "ID, descrição, ementa e id_curso são obrigatórios." });
+                .json({ message: "Descrição, ementa e id_curso são obrigatórios." });
         }
 
         const ccr = await ccrRepository.criarCcr({
-            id,
             descricao,
             ementa,
             id_curso

@@ -2,7 +2,16 @@ const model = require("../models");
 
 // Função para obter todos as matriculas
 const obterTodasMatriculas = async () => {
-	return await model.Matricula.findAll();
+	return await model.Matricula.findAll({
+		include:[
+			{
+				model: model.Curso,
+			},
+			{
+				model: model.Aluno
+			}
+		]
+	});
 };
 
 // Função para obter matricula por ID do aluno

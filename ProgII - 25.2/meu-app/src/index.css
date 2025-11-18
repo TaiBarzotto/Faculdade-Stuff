@@ -48,10 +48,15 @@ button {
 }
 button:hover {
   border-color: #646cff;
+  background-color: rgba(135, 206, 235, 0.87);
 }
 button:focus,
 button:focus-visible {
   outline: 4px auto -webkit-focus-ring-color;
+}
+.btnExcluir:hover{
+  border-color: rgb(165, 11, 11);
+  background-color: rgba(233, 0, 0, 0.87);
 }
 
 @media (prefers-color-scheme: light) {

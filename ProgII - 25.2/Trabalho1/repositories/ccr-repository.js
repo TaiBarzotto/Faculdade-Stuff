@@ -1,7 +1,13 @@
 const model = require("../models");
 
 const obterTodosCcrs = async () => {
-    return await model.Ccr.findAll();
+    return await model.Ccr.findAll({
+        include: [
+            {
+                model: model.Curso,
+            },
+        ]
+    });
 };
 
 // Função para obter ccr por ID

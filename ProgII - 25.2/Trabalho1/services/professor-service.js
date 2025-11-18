@@ -13,17 +13,16 @@ const retornaTodosProfessores = async (req, res) => {
 
 // Função para criar um novo professor
 const criaProfessor = async (req, res) => {
-    const { id, nome, email } = req.body;
-    console.log({ id, nome, email });
+    const {nome, email } = req.body;
+    console.log({nome, email });
     try {
-        if (!id || !nome || !email) {
+        if (!nome || !email) {
             return res
                 .status(400)
-                .json({ message: "ID, nome e email são obrigatórios." });
+                .json({ message: "Nome e email são obrigatórios." });
         }
 
         const professor = await professorRepository.criarProfessor({
-            id,
             nome,
             email,
         });

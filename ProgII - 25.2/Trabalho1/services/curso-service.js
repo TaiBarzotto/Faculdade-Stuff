@@ -13,16 +13,15 @@ const retornaTodosCursos = async (req, res) => {
 
 // Função para criar um novo curso
 const criaCurso = async (req, res) => {
-	const { id, descricao } = req.body;
+	const { descricao } = req.body;
 	try {
-		if (!id || !descricao) {
+		if (!descricao) {
 			return res
 				.status(400)
 				.json({ message: "ID e descrição são obrigatórios." });
 		}
 
 		const curso = await cursoRepository.criarCurso({
-			id,
 			descricao,
 		});
 		res.status(201).json(curso);

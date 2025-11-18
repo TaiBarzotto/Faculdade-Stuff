@@ -7,7 +7,7 @@ import Ccr from './Ccr'
 import Matricula from './Matricula'
 import ProfessorCcr from './ProfessorCcr'
 import Titulo from './Titulo'
-import axios from "axios"
+import Stack from '@mui/material/Stack';
 
 export default function App() {
   const [exibirCursos, setExibirCursos] = useState(true);
@@ -31,17 +31,17 @@ export default function App() {
       setExibirCcr(false);
       setExibirMatricula(false);
       setExibirProfessorCcr(false);
-    } 
+    }
   }, [exibirCursos]);
 
   useEffect(() => {
     if (exibirAlunos) {
       setExibirCursos(false);
-      setExibirProfessor(false);  
+      setExibirProfessor(false);
       setExibirCcr(false);
       setExibirMatricula(false);
       setExibirProfessorCcr(false);
-    } 
+    }
   }, [exibirAlunos]);
 
   useEffect(() => {
@@ -86,30 +86,30 @@ export default function App() {
   return (
     <>
       {<Titulo />}
-      <br />
-      <button onClick={controlaCursos} type="submit">Ver Cursos</button>
-      {exibirCursos && <Curso />}
+      <Stack>
+        <button onClick={controlaCursos} type="submit">Ver Cursos</button>
+        {exibirCursos && <Curso />}
 
+        <br/>
+        <button onClick={controlaAlunos} type="submit">Ver Alunos</button>
+        {exibirAlunos && <Aluno />}
 
-      <br />
-      <button onClick={controlaAlunos} type="submit">Ver Alunos</button>
-      {exibirAlunos && <Aluno />}
+        <br/>
+        <button onClick={controlaProfessor} type="submit">Ver Professores</button>
+        {exibirProfessor && <Professor />}
 
-      <br />
-      <button onClick={controlaProfessor} type="submit">Ver Professores</button>
-      {exibirProfessor && <Professor/>}
+        <br/>
+        <button onClick={controlaCcr} type="submit">Ver Ccrs</button>
+        {exibirCcr && <Ccr />}
 
-      <br />
-      <button onClick={controlaCcr} type="submit">Ver Ccrs</button>
-      {exibirCcr && <Ccr/>}
+        <br/>
+        <button onClick={controlaMatricula} type="submit">Ver Matriculas</button>
+        {exibirMatricula && <Matricula />}
 
-      <br />
-      <button onClick={controlaMatricula} type="submit">Ver Matriculas</button>
-      {exibirMatricula && <Matricula/>}
-
-      <br />
-      <button onClick={controlaProfessorCcr} type="submit">Ver ProfessorCcrs</button>
-      {exibirProfessorCcr && <ProfessorCcr/>}
+        <br/>
+        <button onClick={controlaProfessorCcr} type="submit">Ver ProfessorCcrs</button>
+        {exibirProfessorCcr && <ProfessorCcr />}
+      </Stack>
     </>
   )
 }

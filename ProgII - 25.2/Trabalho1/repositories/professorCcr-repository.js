@@ -2,7 +2,16 @@ const model = require("../models");
 
 // Função para obter todos as ProfessorCcrs
 const obterTodosProfessorCcrs = async () => {
-    return await model.ProfessorCcr.findAll();
+    return await model.ProfessorCcr.findAll({
+        include: [
+            {
+                model: model.Professor,
+            },
+            {
+                model: model.Ccr
+            }
+        ]
+    });
 };
 
 // Função para obter ProfessorCcr por ID do professor
@@ -13,7 +22,7 @@ const obterProfessorCcrPorIdProfessor = async (id_professor) => {
         },
         include: [
             {
-                model: model.ccr,
+                model: model.Ccr,
             },
         ],
     });
@@ -27,7 +36,7 @@ const obterProfessorCcrPorIdCcr = async (id_ccr) => {
         },
         include: [
             {
-                model: model.professor,
+                model: model.Professor,
             },
         ],
     });

@@ -6,6 +6,7 @@ module.exports = (sequelize, DataTypes) => {
 		{
 			id: {
 				type: DataTypes.INTEGER,
+				autoIncrement: true,
 				primaryKey: true,
 			},
 			nome: DataTypes.STRING,
@@ -21,7 +22,7 @@ module.exports = (sequelize, DataTypes) => {
 	);
 
 	Professor.associate = function (models) {
-		Professor.hasMany(models.Matricula, {
+		Professor.hasMany(models.ProfessorCcr, {
 			foreignKey: "id_professor",
 			sourceKey: "id",
 		});

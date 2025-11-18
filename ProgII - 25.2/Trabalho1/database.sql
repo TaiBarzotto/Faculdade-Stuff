@@ -1,6 +1,6 @@
 CREATE TABLE aluno
 (
-  id bigint  NOT NULL,
+  id serial  NOT NULL,
   nome      varchar NOT NULL,
   email     varchar NOT NULL,
   PRIMARY KEY (id)
@@ -8,7 +8,7 @@ CREATE TABLE aluno
 
 CREATE TABLE curso
 (
-  id bigint  NOT NULL,
+  id serial  NOT NULL,
   descricao varchar NOT NULL,
   PRIMARY KEY (id)
 );
@@ -46,7 +46,7 @@ INSERT INTO matricula (id_aluno, id_curso) VALUES (3, 3);
 -- ===== DADOS DE EXEMPLO =====
 CREATE TABLE professor
 (
-  id bigint  NOT NULL,
+  id serial  NOT NULL,
   nome      varchar NOT NULL,
   email     varchar NOT NULL,
   PRIMARY KEY (id)
@@ -56,7 +56,7 @@ CREATE TABLE professor
 
 CREATE TABLE ccr
 (
-  id        BIGINT  NOT NULL,
+  id        serial  NOT NULL,
   descricao VARCHAR NULL    ,
   ementa    VARCHAR NULL    ,
   id_curso  int     NOT NULL,
